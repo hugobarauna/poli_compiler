@@ -5,6 +5,14 @@ ARGS = "-std=c99 -Wall -O2"
 desc "Compile hashtable"
 task :hashtable => "bin/hashtable.o"
 
+desc "Run scanner test"
+task :scanner_test => "test/scanner_test.o" do |t|
+    generated_test_file = make_tests('test/scanner_test.c')
+    deps = prepare_dependencies(generated_test_file)
+    generated_test = generated_test_file.split('.')[0]
+    sh "gcc #{ARGS} #{deps} src/scanner.c test/scanner_test.c -o bin/#{generated_test} && ./bin/#{generated_test}"
+end
+
 desc "Run lexer test"
 task :lexer_test => "test/lexer_test.o" do |t|
     generated_test_file = make_tests('test/lexer_test.c')
@@ -18,6 +26,7 @@ end
 file "bin/hashtable.o" => ["src/hashtable.c"]
 
 # tests
+file "test/scanner_test.o" => ["test/scanner_test.c", "src/scanner.c"]
 file "test/lexer_test.o" => ["test/lexer_test.c", "src/lexer.c"]
 
 # Rules

@@ -188,6 +188,15 @@ void CuAssertStrEquals_LineMsg(CuTest* tc, const char* file, int line, const cha
 	CuFailInternal(tc, file, line, &string);
 }
 
+void CuAssertCharEquals_LineMsg(CuTest* tc, const char* file, int line, const char* message, 
+	char expected, char actual)
+{
+	char buf[STRING_MAX];
+	if (expected == actual) return;
+	sprintf(buf, "expected <%c> but was <%c>", expected, actual);
+	CuFail_Line(tc, file, line, message, buf);
+}
+
 void CuAssertIntEquals_LineMsg(CuTest* tc, const char* file, int line, const char* message, 
 	int expected, int actual)
 {
