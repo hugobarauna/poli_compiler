@@ -12,7 +12,7 @@ Hashtable *new_hashtable(unsigned int size) {
   if (new_ht->entries == NULL) { free(new_ht); return NULL; }
 
   // set table entry pointers to NULL
-  memset(new_ht->entries, NULL, entries_list_size);
+  memset(new_ht->entries, 0, entries_list_size);
 
   return new_ht;
 }

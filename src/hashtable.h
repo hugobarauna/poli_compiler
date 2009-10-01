@@ -1,5 +1,8 @@
 /*#define HASHTABLE_SIZE 100*/
-#include <malloc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define KEY char
 #define VALUE char
 
@@ -19,11 +22,11 @@ typedef struct _hashtable {
 Hashtable *new_hashtable(unsigned int size);
 
 // insert a <key, value> pair to hashtable
-void hashtable_insert(Hashtable *ht, KEY *k, VALUE *v);
+//void hashtable_insert(Hashtable *ht, KEY *k, VALUE *v);
 
 // retrieve the value from key
-VALUE hashtable_get(Hashtable *ht, KEY *k);
+//VALUE hashtable_get(Hashtable *ht, KEY *k);
 
 /*TODO*/
-/*// free hashtable memory*/
+// free hashtable memory*/*/
 /*void free_hashtable(Hashtable *ht);*/

@@ -1,68 +1,91 @@
+require 'rake/clean'
+CLEAN.include('*.o')
+CLOBBER.include('bin/test:*')
+
 ARGS = "-std=c99 -Wall -O2"
+SRC = FileList['**/*.c']
 
-# Tasks
+require "ruby-debug"
 
-desc "Compile hashtable"
-task :hashtable => "bin/hashtable.o"
 
-desc "Run StringBuffer test"
-task :string_buffer_test => "test/string_buffer_test.o" do |t|
-    generated_test_file = make_tests('test/string_buffer_test.c')
-    deps = prepare_dependencies(generated_test_file)
-    generated_test = generated_test_file.split('.')[0]
-    sh "gcc #{ARGS} #{deps} src/string_buffer.c test/string_buffer_test.c -o bin/#{generated_test} && ./bin/#{generated_test}"
+
+###################
+#   Test Tasks   ##
+###################
+
+namespace "test" do
+  desc "Run StringBuffer tests"
+  task :string_buffer => ["string_buffer_test.o", "string_buffer.o", 
+                               "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/string_buffer_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_string_buffer_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
+
+  desc "Run scanner tests"
+  task :scanner => ["scanner_test.o", "scanner.o", "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/scanner_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_scanner_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
+
+  desc "Run lexer tests"
+  task :lexer => ["lexer_test.o", "lexer.o", "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/lexer_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_lexer_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
+
+  desc "Run hashtable tests"
+  task :hashtable => ["hashtable_test.o", "hashtable.o", "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/hashtable_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_hashtable_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
 end
 
-desc "Run scanner test"
-task :scanner_test => "test/scanner_test.o" do |t|
-    generated_test_file = make_tests('test/scanner_test.c')
-    deps = prepare_dependencies(generated_test_file)
-    generated_test = generated_test_file.split('.')[0]
-    sh "gcc #{ARGS} #{deps} src/scanner.c test/scanner_test.c -o bin/#{generated_test} && ./bin/#{generated_test}"
-end
 
-desc "Run lexer test"
-task :lexer_test => "test/lexer_test.o" do |t|
-    generated_test_file = make_tests('test/lexer_test.c')
-    deps = prepare_dependencies(generated_test_file)
-    generated_test = generated_test_file.split('.')[0]
-    sh "gcc #{ARGS} #{deps} src/lexer.c test/lexer_test.c -o bin/#{generated_test} && ./bin/#{generated_test}"
-end
 
-# compilations
+#####################
+#   Compilations   ##
+#####################
 
-file "bin/hashtable.o" => ["src/hashtable.c"]
+#file "hashtable.o" => ["src/hashtable.c"]
 
-# tests
-file "test/scanner_test.o" => ["test/scanner_test.c", "src/scanner.c"]
-file "test/lexer_test.o" => ["test/lexer_test.c", "src/lexer.c"]
 
-# Rules
 
-# generate object files
-rule '.o' => '.c' do |t|
+########################################
+#   Tests tasks  dependencies         ##
+########################################
+
+file "CuTest.o"               => ["test/CuTest.c"]
+file "scanner_test.o"         => ["test/scanner_test.c", "src/scanner.c"]
+file "lexer_test.o"           => ["test/lexer_test.c", "src/lexer.c"]
+file "string_buffer_test.o"   => ["test/string_buffer_test.c", "src/string_buffer.c"]
+file "hashtable_test.o"       => ["test/hashtable_test.c", "src/hashtable.c"]
+
+
+
+##############
+#   Rules   ##
+##############
+
+# This rule generate rake tasks for the scenarios where you want to generate
+# a object file that can have source files that aren't in the same directory of 
+# the object file.
+#
+rule '.o' => lambda{ |objfile| find_deps(objfile) } do |t|
   deps = t.prerequisites.join(' ')
   sh "gcc #{ARGS} -c #{deps}"
 end
 
-# Helper Functions
 
-def prepare_dependencies(prerequisites=[])
-  deps = []
-  deps << prerequisites
-  deps << ["test/CuTest.c"]
-  deps.join(' ')
-end
 
-def retrieve_tests(test_file)
-  test_names = []
-  f = File.open(test_file, "r")
-  f.each_line do |line|
-    test_names << line.gsub(/(^void\s*|\(.*$\n?)/, '') if line =~ /^void test_/
-  end
-  f.close
-  test_names
-end
+# Helper methods
 
 def make_tests(test_file=nil)
   test_names = []
@@ -95,6 +118,31 @@ def make_tests(test_file=nil)
   output_file_name
 end
 
+def retrieve_tests(test_file)
+  test_names = []
+  f = File.open(test_file, "r")
+  f.each_line do |line|
+    test_names << line.gsub(/(^void\s*|\(.*$\n?)/, '') if line =~ /^void test_/
+  end
+  f.close
+  test_names
+end
+
+# This methods finds all the source files that a CuTest unit test object file 
+# can depends on.
+# For example:
+#   find_deps('hashtable_test.o')
+#     => ['src/hashtable.c', 'test/hashtable_test.c']
+#
+def find_deps(object_file)
+  base = File.basename(object_file, '.o')
+
+  SRC.find_all do |source| 
+    File.basename(source, '.c') == base || 
+        File.basename(source, '.c') == base.sub(/_test/, '')
+  end
+end
+
 
 TEST_CODE_TEMPLATE = <<EOF
 #include <stdio.h>
@@ -124,4 +172,3 @@ int main(void)
     return 0;
 }
 EOF
-
