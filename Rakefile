@@ -5,6 +5,14 @@ ARGS = "-std=c99 -Wall -O2"
 desc "Compile hashtable"
 task :hashtable => "bin/hashtable.o"
 
+desc "Run StringBuffer test"
+task :string_buffer_test => "test/string_buffer_test.o" do |t|
+    generated_test_file = make_tests('test/string_buffer_test.c')
+    deps = prepare_dependencies(generated_test_file)
+    generated_test = generated_test_file.split('.')[0]
+    sh "gcc #{ARGS} #{deps} src/string_buffer.c test/string_buffer_test.c -o bin/#{generated_test} && ./bin/#{generated_test}"
+end
+
 desc "Run scanner test"
 task :scanner_test => "test/scanner_test.o" do |t|
     generated_test_file = make_tests('test/scanner_test.c')
