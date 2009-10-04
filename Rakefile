@@ -13,7 +13,8 @@ require "ruby-debug"
 #   Test Tasks   ##
 ###################
 
-namespace "test" do
+namespace "test" do |namespace|
+
   desc "Run StringBuffer tests"
   task :string_buffer => ["string_buffer_test.o", "string_buffer.o", 
                                "CuTest.o"] do |t|
@@ -31,13 +32,13 @@ namespace "test" do
       sh "./bin/#{t.name}"
   end
 
-  desc "Run lexer tests"
-  task :lexer => ["lexer_test.o", "lexer.o", "CuTest.o"] do |t|
-      generated_test_file = make_tests('test/lexer_test.c')
-      sh "gcc #{ARGS} -c #{generated_test_file}"
-      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_lexer_test.o -o bin/#{t.name}"
-      sh "./bin/#{t.name}"
-  end
+#  desc "Run lexer tests"
+#  task :lexer => ["lexer_test.o", "lexer.o", "CuTest.o"] do |t|
+#      generated_test_file = make_tests('test/lexer_test.c')
+#      sh "gcc #{ARGS} -c #{generated_test_file}"
+#      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_lexer_test.o -o bin/#{t.name}"
+#      sh "./bin/#{t.name}"
+#  end
 
   desc "Run hashtable tests"
   task :hashtable => ["hashtable_test.o", "hashtable.o", "CuTest.o"] do |t|
@@ -46,6 +47,18 @@ namespace "test" do
       sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_hashtable_test.o -o bin/#{t.name}"
       sh "./bin/#{t.name}"
   end
+
+  test_tasks = namespace.tasks.inject([]) { |tasks, task| tasks.concat(task.prerequisites) }
+  test_tasks.uniq!
+  # This task must be defined after all tests
+  desc "Run all tests"
+  task :all => test_tasks do |t|
+    generated_test_file = make_tests
+    sh "gcc #{ARGS} -c #{generated_test_file}"
+    sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_all_test.o -o bin/#{t.name}"
+    sh "./bin/#{t.name}"
+  end
+
 end
 
 

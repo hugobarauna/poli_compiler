@@ -16,7 +16,7 @@ static char *begin_lexeme_ptr = NULL; /* */
 static int num_chars; /* number of chars readed */
 static Buffer *current_buffer = NULL;
 
-void fatal_error(const char *msg)
+static void fatal_error(const char *msg)
 {
     fprintf(stderr, "%s\n", msg);
     exit(1);

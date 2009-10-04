@@ -3,7 +3,7 @@
 #include <string.h>
 #include "string_buffer.h"
 
-void fatal_error(const char *msg)
+static void fatal_error(const char *msg)
 {
     printf("%s\n", msg);
     exit(1);
