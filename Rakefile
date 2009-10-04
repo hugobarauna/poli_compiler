@@ -2,7 +2,7 @@ require 'rake/clean'
 CLEAN.include('*.o')
 CLOBBER.include('bin/test:*')
 
-ARGS = "-std=c99 -Wall -O2"
+ARGS = "-std=c99 -Wall -O2 -g"
 SRC = FileList['**/*.c']
 
 require "ruby-debug"

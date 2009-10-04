@@ -1,6 +1,10 @@
 #include "hashtable.h"
+#include <string.h>
 
-Hashtable *new_hashtable(unsigned int size) {
+static Entry* new_entry(KEY key, VALUE value);
+
+
+Hashtable* hashtable_new(unsigned int size) {
   Hashtable *new_ht = (Hashtable *)malloc(sizeof(Hashtable));
   new_ht->size = size;
 
@@ -15,4 +19,52 @@ Hashtable *new_hashtable(unsigned int size) {
   memset(new_ht->entries, 0, entries_list_size);
 
   return new_ht;
+}
+
+void hashtable_delete(Hashtable *table) {
+  for (int i = 0; i < table->size; i++) 
+    free(table->entries[i]);
+
+  free(table);
+}
+
+void hashtable_insert(Hashtable *table, KEY key, VALUE value) {
+  int internal_key;
+  internal_key = table->hashing_function(key);
+
+  /* No colision */
+  if (table->entries[internal_key] == NULL) {
+    Entry* entry = new_entry(key, value);
+    table->entries[internal_key] = entry;
+  }
+  else {
+    Entry *entry = new_entry(key, value);
+
+    Entry *previous_entry = table->entries[internal_key];
+    previous_entry->next = entry;
+  }
+}
+
+VALUE hashtable_get(Hashtable *table, KEY key) {
+  Entry *entry;
+  int internal_key;
+  internal_key = table->hashing_function(key);
+
+  entry = table->entries[internal_key];
+  if (entry == NULL) return NULL;
+
+  while ( entry != NULL && strcmp(entry->key, key) ) {
+    entry = entry->next;
+  }
+
+  return entry == NULL ? NULL : entry->value;
+}
+
+
+static Entry* new_entry(KEY key, VALUE value) {
+  Entry* entry = (Entry *) malloc(sizeof(Entry));
+  entry->key = key;
+  entry->value = value;
+  entry->next = NULL;
+  return entry;
 }
