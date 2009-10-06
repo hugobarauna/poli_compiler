@@ -7,8 +7,6 @@ SRC = FileList['**/*.c']
 
 require "ruby-debug"
 
-
-
 ###################
 #   Test Tasks   ##
 ###################
@@ -32,13 +30,13 @@ namespace "test" do |namespace|
       sh "./bin/#{t.name}"
   end
 
-#  desc "Run lexer tests"
-#  task :lexer => ["lexer_test.o", "lexer.o", "CuTest.o"] do |t|
-#      generated_test_file = make_tests('test/lexer_test.c')
-#      sh "gcc #{ARGS} -c #{generated_test_file}"
-#      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_lexer_test.o -o bin/#{t.name}"
-#      sh "./bin/#{t.name}"
-#  end
+  desc "Run lexer tests"
+  task :lexer => ["lexer_test.o", "lexer.o", "string_buffer.o", "scanner.o", "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/lexer_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_lexer_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
 
   desc "Run hashtable tests"
   task :hashtable => ["hashtable_test.o", "hashtable.o", "CuTest.o"] do |t|
@@ -58,8 +56,15 @@ namespace "test" do |namespace|
     sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_all_test.o -o bin/#{t.name}"
     sh "./bin/#{t.name}"
   end
-
 end
+
+#desc "Run lexer test"
+#task :lexer_test => "test/lexer_test.o" do |t|
+#    generated_test_file = make_tests('test/lexer_test.c')
+#    deps = prepare_dependencies([generated_test_file, "src/string_buffer.c", "src/scanner.c"])
+#    generated_test = generated_test_file.split('.')[0]
+#    sh "gcc #{ARGS} #{deps} src/lexer.c test/lexer_test.c -o bin/#{generated_test} && ./bin/#{generated_test}"
+#end
 
 
 
@@ -68,8 +73,6 @@ end
 #####################
 
 #file "hashtable.o" => ["src/hashtable.c"]
-
-
 
 ########################################
 #   Tests tasks  dependencies         ##
@@ -95,7 +98,6 @@ rule '.o' => lambda{ |objfile| find_deps(objfile) } do |t|
   deps = t.prerequisites.join(' ')
   sh "gcc #{ARGS} -c #{deps}"
 end
-
 
 
 # Helper methods

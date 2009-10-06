@@ -1,3 +1,6 @@
+#ifndef __SCANNER_H__
+#define __SCANNER_H__
+
 #include <stdio.h>
 
 #define END_OF_BUFFER       256
@@ -23,3 +26,4 @@ void unread(int c);
 
 const char *get_text();
 char *extract_text();
+#endif

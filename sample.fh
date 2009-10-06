@@ -1,0 +1,5 @@
+if a == 2 do
+    a = 12345
+else
+    b = a
+end

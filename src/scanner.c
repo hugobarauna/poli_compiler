@@ -22,6 +22,15 @@ static void fatal_error(const char *msg)
     exit(1);
 }
 
+static void dump_buffer(const char* buffer, int size)
+{
+    int i;
+    printf("Dump buffer: ");
+    for (i = 0; i < size; ++i)
+        printf("<%x>", buffer[i]);
+    printf("\n");
+}
+
 static void load_buffer()
 {
     num_chars = current_buffer->num_chars;
@@ -100,7 +109,7 @@ static int get_next_buffer()
     char *dest = current_buffer->ch_buf;
     char *source = begin_lexeme_ptr;
     int status, i;
-    printf("\t\t--- begin get_next_buffer() ---\n");
+    //printf("\t\t--- begin get_next_buffer() ---\n");
     /* current_char should be pointing to the second EOB */
     if (current_char > &current_buffer->ch_buf[num_chars+1])
         fatal_error("*** char buffer overflow occured. ***");
@@ -108,19 +117,19 @@ static int get_next_buffer()
     /* first we need to shift the current lexeme being match to the beginning of the buffer */
     /* -1 because we have two EOBs */
     int number_to_move = (int) (current_char - begin_lexeme_ptr) - 1;
-    printf("\t\tnumber_to_move: %d\n", number_to_move);
+    //printf("\t\tnumber_to_move: %d\n", number_to_move);
     for (i = 0; i < number_to_move; ++i) {
         // *(dest++) = *(source++);
-        printf("\t\tdest: %c (0x%x) <- source: %c (0x%x)\n", *dest, *dest, *source, *source);
+        //printf("\t\tdest: %c (0x%x) <- source: %c (0x%x)\n", *dest, *dest, *source, *source);
         *dest++ = *source++;
     }
     
     int num_to_read = current_buffer->buf_size - number_to_move;
-    printf("\t\tnum_to_read: %d\n", num_to_read);
+    //printf("\t\tnum_to_read: %d\n", num_to_read);
     
     /* the current lexeme being match is the whole or bigger than the char buffer */
     while (num_to_read <= 0) {
-        printf("\t\twe need more room to continue reading\n");
+        //printf("\t\twe need more room to continue reading\n");
         
         Buffer *b = current_buffer;
         
@@ -146,7 +155,7 @@ static int get_next_buffer()
     /* read more data to buffer */
     num_chars = fread(&current_buffer->ch_buf[number_to_move], 1, num_to_read, current_input);
     
-    printf("\t\tnum_chars readed: %d\n", num_chars);
+    //printf("\t\tnum_chars readed: %d\n", num_chars);
     current_buffer->num_chars = num_chars;
     
     if (num_chars == 0)
@@ -160,31 +169,31 @@ static int get_next_buffer()
     
     begin_lexeme_ptr = &current_buffer->ch_buf[0];
     
-    printf("\t\t---- end get_next_buffer() ----\n");
+    //printf("\t\t---- end get_next_buffer() ----\n");
     return status;
 }
 
 int read()
 {
     int ch;
-    printf("--- begin read_char() ---\n");
-    printf("ch_buf: %p, current_char: %p\n", current_buffer->ch_buf, current_char);
+    //printf("--- begin read_char() ---\n");
+    //printf("ch_buf: %p, current_char: %p\n", current_buffer->ch_buf, current_char);
 
-    printf("*current_char: %c (%x) <- next_char: %c (%x)\n", *current_char, *current_char, next_char, next_char);
+    //printf("*current_char: %c (%x) <- next_char: %c (%x)\n", *current_char, *current_char, next_char, next_char);
     *current_char = next_char;
     
     if (*current_char == END_OF_BUFFER_CHAR)
     {
-        printf("\tcurrent_char is END_OF_BUFFER_CHAR\n");
+        //printf("\tcurrent_char is END_OF_BUFFER_CHAR\n");
         if (current_char < &current_buffer->ch_buf[num_chars]) {
-            printf("is a true EOF\n");
+            //printf("is a true EOF\n");
             *current_char = '\0';
         }
         else
         {
-            printf("\tgetting next buffer\n");
+            //printf("\tgetting next buffer\n");
             int offset = current_char - begin_lexeme_ptr;
-            printf("\toffset: %d\n", offset);
+            //printf("\toffset: %d\n", offset);
             ++current_char; // go to second EOB
             switch (get_next_buffer())
             {
@@ -203,16 +212,12 @@ int read()
     ch = *(unsigned char *) current_char;
     next_char = *++current_char;
     *current_char = '\0'; /* clean char readed */
-    
-    printf("> current_char: %p (end of lexeme), next_char: %c (%x)\n", current_char, next_char, next_char);
-    
-    printf("---- end read_char() ----\n");
+    //printf("---- end read_char() ----\n");
     return ch;
 }
 
 void unread(int ch) 
 {
-    printf("--- begin unread() ---\n");
     if (ch == EOF) ch = '\0';
     char *copy;
 
@@ -221,11 +226,11 @@ void unread(int ch)
     *copy = next_char; // put char back
     
     char *bp = begin_lexeme_ptr;
-    printf("ch_buf: %p, current_char: %p\n", current_buffer->ch_buf, current_char);
+    //printf("ch_buf: %p, current_char: %p\n", current_buffer->ch_buf, current_char);
     
     *copy = next_char;
     
-    printf("copy: %p, current_buffer->ch_buf: %p\n", copy, current_buffer->ch_buf);
+    //printf("copy: %p, current_buffer->ch_buf: %p\n", copy, current_buffer->ch_buf);
     if (copy < current_buffer->ch_buf+2)
     {
         printf("\t--- try to create a room for char ---\n");
@@ -256,5 +261,4 @@ void unread(int ch)
     *--copy = '\0';
     begin_lexeme_ptr = bp;
     current_char = copy;
-    printf("---- end unread() ----\n");
 }
