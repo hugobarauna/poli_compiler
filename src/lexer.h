@@ -1,7 +1,7 @@
-#include "scanner.h"
-
 #ifndef __LEXER_H__
 #define __LEXER_H__
+
+#include "scanner.h"
 
 #define ID 0
 #define NUMBER 1

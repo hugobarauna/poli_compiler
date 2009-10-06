@@ -1,4 +1,7 @@
 /*#define HASHTABLE_SIZE 100*/
+#ifndef __HASHTABLE_H__
+#define __HASHTABLE_H__
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,3 +41,5 @@ VALUE hashtable_get(Hashtable *table, KEY key);
 /*TODO*/
 // free hashtable memory*/*/
 /*void free_hashtable(Hashtable *ht);*/
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef __STRING_BUFFER_H__
+#define __STRING_BUFFER_H__
+
 typedef struct string_buffer {
     int capacity;
     int length;
@@ -14,3 +17,5 @@ StringBuffer *concat_strbuf(StringBuffer *sb1, StringBuffer *sb2);
 void clear_strbuf(StringBuffer *sb);
 
 char *to_str(StringBuffer *sb);
+
+#endif
