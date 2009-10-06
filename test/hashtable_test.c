@@ -12,7 +12,7 @@ void test_create_hashtable(CuTest *tc) {
   CuAssertPtrNotNull(tc, table);
 
   for (int i = 0; i < 10; i++) {
-    CuAssertPtrEquals(tc, NULL, table->entries[i]);
+    CuAssertPtrNull(tc, table->entries[i]);
   }
 
   hashtable_delete(table);
@@ -29,7 +29,7 @@ void test_insert_an_element(CuTest *tc) {
 }
 
 void test_get_an_element(CuTest *tc) {
-  VALUE *my_value;
+  VALUE my_value;
   Hashtable *table = hashtable_new(10);
 
   table->hashing_function = hashing_helper;
@@ -42,16 +42,16 @@ void test_get_an_element(CuTest *tc) {
 }
 
 void test_get_an_element_in_an_empty_hashtable(CuTest *tc) {
-  VALUE *my_value;
+  VALUE my_value;
   Hashtable *table = hashtable_new(10);
 
   my_value = hashtable_get(table, "my_key");
 
-  CuAssertPtrEquals(tc, NULL, my_value);
+  CuAssertPtrNull(tc, my_value);
 }
 
 void test_get_an_element_with_colision(CuTest *tc) {
-  VALUE *my_value;
+  VALUE my_value;
   Hashtable *table = hashtable_new(10);
   table->hashing_function = hashing_helper;
 
@@ -68,14 +68,14 @@ void test_get_an_element_with_colision(CuTest *tc) {
 }
 
 void test_get_an_null_element_with_colision(CuTest *tc) {
-  VALUE *my_value;
+  VALUE my_value;
   Hashtable *table = hashtable_new(10);
   table->hashing_function = hashing_helper;
 
   hashtable_insert(table, "first_key", "first_value");
   my_value = hashtable_get(table, "second_key");
 
-  CuAssertPtrEquals(tc, NULL, my_value);
+  CuAssertPtrNull(tc, my_value);
 }
 
 /* Helpers */
