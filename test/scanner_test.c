@@ -61,6 +61,25 @@ void test_start_with_unread_the_returned_char_should_not_be_a_lexeme(CuTest *tc)
     delete_buffer(b);
 }
 
+void test_when_unreading_EOF_it_should_put_back_EOB(CuTest *tc)
+{
+    int i, c;
+    char *expected_text = "hello world";
+    FILE *fp = fopen("scanner.in", "r");
+    Buffer *b = new_buffer(fp, 10);
+    for (i = 0; i < strlen(expected_text); ++i)
+        read();
+    CuAssertStrEquals(tc, expected_text, get_text());
+    
+    c = read();
+    CuAssertIntEquals(tc, EOF, c);
+    unread(c);
+    
+    c = read();
+    CuAssertIntEquals(tc, EOF, c);
+    delete_buffer(b);
+}
+
 void test_grow_buffer_when_token_is_bigger_than_buffer(CuTest *tc)
 {
     int i, buffer_size = 2;

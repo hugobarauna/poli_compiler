@@ -213,6 +213,7 @@ int read()
 void unread(int ch) 
 {
     printf("--- begin unread() ---\n");
+    if (ch == EOF) ch = '\0';
     char *copy;
 
     /* undo the setting up of lexeme with \0 */
