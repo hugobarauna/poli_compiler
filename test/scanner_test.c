@@ -33,6 +33,25 @@ void test_unread_char_to_buffer(CuTest *tc)
     delete_buffer(b);
 }
 
+void test_unread_char_to_buffer_should_rollback_state(CuTest *tc)
+{
+    char *expected_word = "hello";
+    FILE *fp = fopen("scanner.in", "r");
+    Buffer *b = new_buffer(fp, 10);
+    int c, i;
+    for (i = 0; i < strlen(expected_word); ++i)
+        read();
+    CuAssertStrEquals(tc, expected_word, get_text());
+    
+    c = read();
+    CuAssertCharEquals(tc, ' ', c);
+    
+    unread(c);
+    CuAssertStrEquals(tc, expected_word, get_text());
+    
+    delete_buffer(b);
+}
+
 void test_start_with_unread_the_returned_char_should_not_be_a_lexeme(CuTest *tc)
 {
     FILE *fp = fopen("scanner.in", "r");

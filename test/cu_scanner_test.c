@@ -7,6 +7,7 @@
 extern void test_create_buffer(CuTest*);
 extern void test_read_char_from_file(CuTest*);
 extern void test_unread_char_to_buffer(CuTest*);
+extern void test_unread_char_to_buffer_should_rollback_state(CuTest*);
 extern void test_start_with_unread_the_returned_char_should_not_be_a_lexeme(CuTest*);
 extern void test_grow_buffer_when_token_is_bigger_than_buffer(CuTest*);
 extern void test_retrieve_token_readed(CuTest*);
@@ -22,6 +23,7 @@ void RunAllTests(void)
     SUITE_ADD_TEST(suite, test_create_buffer);
     SUITE_ADD_TEST(suite, test_read_char_from_file);
     SUITE_ADD_TEST(suite, test_unread_char_to_buffer);
+    SUITE_ADD_TEST(suite, test_unread_char_to_buffer_should_rollback_state);
     SUITE_ADD_TEST(suite, test_start_with_unread_the_returned_char_should_not_be_a_lexeme);
     SUITE_ADD_TEST(suite, test_grow_buffer_when_token_is_bigger_than_buffer);
     SUITE_ADD_TEST(suite, test_retrieve_token_readed);

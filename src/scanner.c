@@ -251,9 +251,9 @@ void unread(int ch)
         printf("\t--- end try to create a room for char ---\n");
     }
     
-    *--copy = (char) ch;
+    next_char = ch;
+    *--copy = '\0';
     begin_lexeme_ptr = bp;
-    next_char = *copy;
     current_char = copy;
     printf("---- end unread() ----\n");
 }
