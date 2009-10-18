@@ -30,6 +30,33 @@ namespace "test" do |namespace|
       sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_bufstream_test.o -o bin/#{t.name}"
       sh "./bin/#{t.name}"
   end
+  
+  desc "Run Alloc module tests"
+  task :alloc => ["alloc_test.o", "alloc.o", "error.o", 
+                               "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/alloc_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_alloc_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
+  
+  desc "Run eXtension string module tests"
+  task :xstring => ["xstring_test.o", "xstring.o", 
+                                "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/xstring_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_xstring_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
+
+  desc "Run FiniteAutomata tests"
+  task :fa => ["fa_test.o", "fa.o", "bufstream.o", "alloc.o", "error.o",
+                  "xstring.o", "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/fa_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_fa_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
 
   desc "Run scanner tests"
   task :scanner => ["scanner_test.o", "scanner.o", "CuTest.o"] do |t|
@@ -88,6 +115,10 @@ end
 ########################################
 
 file "CuTest.o"               => ["test/CuTest.c"]
+file "bufstream_test.o"       => ["test/bufstream_test.c", "src/bufstream.c"]
+file "alloc_test.o"           => ["test/alloc_test.c", "src/alloc.c"]
+file "xstring_test.o"         => ["test/xstring_test.c", "src/xstring.c"]
+file "fa_test.o"              => ["test/fa_test.c", "src/fa.c"]
 file "scanner_test.o"         => ["test/scanner_test.c", "src/scanner.c"]
 file "lexer_test.o"           => ["test/lexer_test.c", "src/lexer.c"]
 file "string_buffer_test.o"   => ["test/string_buffer_test.c", "src/string_buffer.c"]
