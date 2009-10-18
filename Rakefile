@@ -21,6 +21,15 @@ namespace "test" do |namespace|
       sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_string_buffer_test.o -o bin/#{t.name}"
       sh "./bin/#{t.name}"
   end
+  
+  desc "Run BufferedInputStream tests"
+  task :bufstream => ["bufstream_test.o", "bufstream.o", "error.o", 
+                               "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/bufstream_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_bufstream_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
 
   desc "Run scanner tests"
   task :scanner => ["scanner_test.o", "scanner.o", "CuTest.o"] do |t|
