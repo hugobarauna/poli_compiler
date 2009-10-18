@@ -17,43 +17,7 @@ typedef enum {
   HALTREUSE
 } action_t;
 
-enum Tag {
-  NUM,
-  ID,
-  LPAR, /* delimiters */
-  RPAR,
-  LSB, /* square brackets [ ] */
-  RSB,
-  LBR, /* braces { } */
-  RBR,
-  NOT, /* operators */
-  NEQ,
-  EQ,
-  SET,
-  GT,
-  GE,
-  LT,
-  LE,
-  AND,
-  OR,
-  PLUS,
-  MINUS,
-  MULT,
-  DIV,
-  MOD,
-  POW,
-  PLUSEQ,
-  MINUSEQ,
-  MULTEQ,
-  DIVEQ,
-  MODEQ,
-  POWEQ,
-  DO, /* reserved words */
-  WHILE,
-  IF,
-  ELSE,
-  END
-};
+
 
 typedef struct finite_automata {
   char *subject;

@@ -138,7 +138,7 @@ bool fa_run(FiniteAutomata *m, char *token, BufferedInputStream *in)
     //printf("%c", c);
     switch (m->actions[state][c]) {
     case ERROR:
-      printf(" -> ERROR\n");
+      //printf(" -> ERROR\n");
       token[j++] = c;
       token[j] = '\0';
       reverse1(token);

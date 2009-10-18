@@ -2,6 +2,22 @@
 #include "CuTest.h"
 #include "../src/xstring.h"
 
+void test_convert_an_string_to_integer(CuTest *tc)
+{
+    char *num = "100";
+    int n;
+    n = atoi(num);
+    CuAssertIntEquals(tc, 100, n);
+}
+
+void test_convert_an_integer_to_string(CuTest *tc)
+{
+    char *str;
+    str = itoa(100);
+    CuAssertStrEquals(tc, "100", str);
+    free(str);
+}
+
 void test_reverse_a_string(CuTest *tc)
 {
     char *text1 = "hello world";

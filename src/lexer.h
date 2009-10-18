@@ -1,7 +1,7 @@
 #ifndef __LEXER_H__
 #define __LEXER_H__
 
-#include "scanner.h"
+#include "bufstream.h"
 
 #define ID 0
 #define NUMBER 1
@@ -16,13 +16,9 @@ typedef struct token {
     } value;
 } Token;
 
-typedef struct lexer {
-    Buffer *buffer;
-    Token* (*read_token) (void);
-} Lexer;
-
-Lexer *lexer_new();
-void lexer_delete(Lexer *lexer);
+void init_lexer();
+void destroy_lexer();
+Token *read_token(BufferedInputStream *);
 
 Token *word_new(int class, char *word);
 Token *reserved_new(char *word);

@@ -41,7 +41,7 @@ namespace "test" do |namespace|
   end
   
   desc "Run eXtension string module tests"
-  task :xstring => ["xstring_test.o", "xstring.o", 
+  task :xstring => ["xstring_test.o", "xstring.o", "error.o",
                                 "CuTest.o"] do |t|
       generated_test_file = make_tests('test/xstring_test.c')
       sh "gcc #{ARGS} -c #{generated_test_file}"
@@ -58,16 +58,9 @@ namespace "test" do |namespace|
       sh "./bin/#{t.name}"
   end
 
-  desc "Run scanner tests"
-  task :scanner => ["scanner_test.o", "scanner.o", "CuTest.o"] do |t|
-      generated_test_file = make_tests('test/scanner_test.c')
-      sh "gcc #{ARGS} -c #{generated_test_file}"
-      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_scanner_test.o -o bin/#{t.name}"
-      sh "./bin/#{t.name}"
-  end
-
   desc "Run lexer tests"
-  task :lexer => ["lexer_test.o", "lexer.o", "string_buffer.o", "scanner.o", "CuTest.o"] do |t|
+  task :lexer => ["lexer_test.o", "lexer.o", "string_buffer.o", "fa.o", "error.o", 
+                    "bufstream.o", "xstring.o", "alloc.o", "CuTest.o"] do |t|
       generated_test_file = make_tests('test/lexer_test.c')
       sh "gcc #{ARGS} -c #{generated_test_file}"
       sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_lexer_test.o -o bin/#{t.name}"
@@ -119,7 +112,6 @@ file "bufstream_test.o"       => ["test/bufstream_test.c", "src/bufstream.c"]
 file "alloc_test.o"           => ["test/alloc_test.c", "src/alloc.c"]
 file "xstring_test.o"         => ["test/xstring_test.c", "src/xstring.c"]
 file "fa_test.o"              => ["test/fa_test.c", "src/fa.c"]
-file "scanner_test.o"         => ["test/scanner_test.c", "src/scanner.c"]
 file "lexer_test.o"           => ["test/lexer_test.c", "src/lexer.c"]
 file "string_buffer_test.o"   => ["test/string_buffer_test.c", "src/string_buffer.c"]
 file "hashtable_test.o"       => ["test/hashtable_test.c", "src/hashtable.c"]
