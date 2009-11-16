@@ -7,7 +7,7 @@
 #include <string.h>
 
 #define KEY   char*
-#define VALUE char*
+#define VALUE void*
 
 typedef struct _entry {
     KEY key;

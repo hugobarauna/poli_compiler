@@ -24,6 +24,7 @@ extern void test_get_an_element(CuTest*);
 extern void test_get_an_element_in_an_empty_hashtable(CuTest*);
 extern void test_get_an_element_with_colision(CuTest*);
 extern void test_get_an_null_element_with_colision(CuTest*);
+extern void test_internal_key_should_be_inside_range_of_table_indexes(CuTest*);
 extern void test_read_all_tokens(CuTest*);
 extern void test_number_token(CuTest*);
 extern void test_dump_token_word(CuTest*);
@@ -65,6 +66,7 @@ void RunAllTests(void)
     SUITE_ADD_TEST(suite, test_get_an_element_in_an_empty_hashtable);
     SUITE_ADD_TEST(suite, test_get_an_element_with_colision);
     SUITE_ADD_TEST(suite, test_get_an_null_element_with_colision);
+    SUITE_ADD_TEST(suite, test_internal_key_should_be_inside_range_of_table_indexes);
     SUITE_ADD_TEST(suite, test_read_all_tokens);
     SUITE_ADD_TEST(suite, test_number_token);
     SUITE_ADD_TEST(suite, test_dump_token_word);

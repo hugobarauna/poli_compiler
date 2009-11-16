@@ -6,6 +6,9 @@
 
 /* Helpers */
 int hashing_helper(char *value);
+static int hashfn_bigger_than_table(char *value) {
+  return 12345;
+}
 
 void test_create_hashtable(CuTest *tc) {
   Hashtable *table = hashtable_new(10);
@@ -48,6 +51,8 @@ void test_get_an_element_in_an_empty_hashtable(CuTest *tc) {
   my_value = hashtable_get(table, "my_key");
 
   CuAssertPtrNull(tc, my_value);
+  
+  hashtable_delete(table);
 }
 
 void test_get_an_element_with_colision(CuTest *tc) {
@@ -76,6 +81,19 @@ void test_get_an_null_element_with_colision(CuTest *tc) {
   my_value = hashtable_get(table, "second_key");
 
   CuAssertPtrNull(tc, my_value);
+  hashtable_delete(table);
+}
+
+void test_internal_key_should_be_inside_range_of_table_indexes(CuTest *tc) {
+  VALUE myvalue;
+  Hashtable *table = hashtable_new(10);
+  table->hashing_function = hashfn_bigger_than_table;
+
+  hashtable_insert(table, "any_key", "foo");
+  myvalue = hashtable_get(table, "any_key");
+
+  CuAssertStrEquals(tc, myvalue, "foo");
+  hashtable_delete(table);
 }
 
 /* Helpers */

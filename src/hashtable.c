@@ -30,7 +30,7 @@ void hashtable_delete(Hashtable *table) {
 
 void hashtable_insert(Hashtable *table, KEY key, VALUE value) {
   int internal_key;
-  internal_key = table->hashing_function(key);
+  internal_key = table->hashing_function(key) % table->size;
 
   /* No colision */
   if (table->entries[internal_key] == NULL) {
@@ -48,7 +48,7 @@ void hashtable_insert(Hashtable *table, KEY key, VALUE value) {
 VALUE hashtable_get(Hashtable *table, KEY key) {
   Entry *entry;
   int internal_key;
-  internal_key = table->hashing_function(key);
+  internal_key = table->hashing_function(key) % table->size;
 
   entry = table->entries[internal_key];
   if (entry == NULL) return NULL;
