@@ -1,20 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "error.h"
 #include "string_buffer.h"
 
-static void fatal_error(const char *msg)
-{
-    printf("%s\n", msg);
-    exit(1);
-}
-
-StringBuffer *new_default_string_buffer()
-{
-    return new_string_buffer(4096);
-}
-
-StringBuffer *new_string_buffer(int capacity)
+StringBuffer *sbuf_new(int capacity)
 {
     StringBuffer *sb = (StringBuffer *)malloc(sizeof(StringBuffer));
     if (sb == NULL)
@@ -30,14 +21,32 @@ StringBuffer *new_string_buffer(int capacity)
     return sb;
 }
 
-void delete_string_buffer(StringBuffer *sb)
+void sbuf_delete(StringBuffer *sb)
 {
     if (sb == NULL) return;
     free(sb->buffer);
     free(sb);
 }
 
-StringBuffer *append_str(StringBuffer *sb, const char *str)
+StringBuffer *sbuf_append_char(StringBuffer *sb, char c)
+{
+  if (sb == NULL) return sb;
+
+  if (sb->length >= sb->capacity) {
+    sb->buffer = realloc(sb->buffer, 2 * sb->capacity);
+    if (sb->buffer == NULL)
+      fatal_error("unable to grow string buffer");
+
+    sb->capacity *= 2;
+  }
+
+  sb->buffer[sb->length++] = c;
+  sb->buffer[sb->length] = '\0';
+
+  return sb; 
+}
+
+StringBuffer *sbuf_append(StringBuffer *sb, const char *str)
 {
     if (sb == NULL || str == NULL) return sb;
 
@@ -58,13 +67,13 @@ StringBuffer *append_str(StringBuffer *sb, const char *str)
     return sb;
 }
 
-StringBuffer *concat_strbuf(StringBuffer *sb1, StringBuffer *sb2)
+StringBuffer *sbuf_concat(StringBuffer *sb1, StringBuffer *sb2)
 {
-    append_str(sb1, to_str(sb2));
+    sbuf_append(sb1, to_str(sb2));
     return sb1;
 }
 
-void clear_strbuf(StringBuffer *sb)
+void sbuf_clear(StringBuffer *sb)
 {
     memset(sb->buffer, 0, sb->length);
     sb->length = 0;

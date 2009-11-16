@@ -1,20 +1,20 @@
 #ifndef __STRING_BUFFER_H__
 #define __STRING_BUFFER_H__
 
-typedef struct string_buffer {
+typedef struct _strbuf {
     int capacity;
     int length;
     char *buffer;
 } StringBuffer;
 
-StringBuffer *new_default_string_buffer();
-StringBuffer *new_string_buffer(int size);
-void delete_string_buffer(StringBuffer *sb);
+StringBuffer *sbuf_new(int size);
+void sbuf_delete(StringBuffer *sb);
 
-StringBuffer *append_str(StringBuffer *sb, const char *str);
-StringBuffer *concat_strbuf(StringBuffer *sb1, StringBuffer *sb2);
+StringBuffer *sbuf_append(StringBuffer *sb, const char *str);
+StringBuffer *sbuf_append_char(StringBuffer *sb, char c);
+StringBuffer *sbuf_concat(StringBuffer *sb1, StringBuffer *sb2);
 
-void clear_strbuf(StringBuffer *sb);
+void sbuf_clear(StringBuffer *sb);
 
 char *to_str(StringBuffer *sb);
 

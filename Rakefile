@@ -14,7 +14,7 @@ require "ruby-debug"
 namespace "test" do |namespace|
 
   desc "Run StringBuffer tests"
-  task :string_buffer => ["string_buffer_test.o", "string_buffer.o", 
+  task :string_buffer => ["string_buffer_test.o", "string_buffer.o", "error.o", 
                                "CuTest.o"] do |t|
       generated_test_file = make_tests('test/string_buffer_test.c')
       sh "gcc #{ARGS} -c #{generated_test_file}"
