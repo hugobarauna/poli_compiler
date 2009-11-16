@@ -8,28 +8,23 @@
 
 static char *token_to_s(Token *token) {
     if (token == NULL) return "";
-    StringBuffer *sb = new_default_string_buffer();
-    append_str(sb, "<");
+    StringBuffer *sb = sbuf_new(1024);
+    sbuf_append(sb, "<");
     switch (token->class)
     {
         case ID:
-        append_str(sb, "id, ");
-        append_str(sb, token->value.word);
+        sbuf_append(sb, "id, ");
+        sbuf_append(sb, token->value);
         break;
         case NUMBER:
-        append_str(sb, "num, ");
-        append_str(sb, itoa(token->value.number));
+        sbuf_append(sb, "num, ");
+        sbuf_append(sb, token->value);
         break;
-        case RESERVED:
-        append_str(sb, "reserved, ");
-        append_str(sb, token->value.word);
-        break;
-        case UNKNOWN:
-        append_str(sb, "unknown, ");
-        append_str(sb, token->value.word);
+        default:
+        sbuf_append(sb, token->value);
         break;
     }
-    append_str(sb, ">");
+    sbuf_append(sb, ">");
     return to_str(sb);
 }
 
@@ -37,44 +32,13 @@ void test_read_all_tokens(CuTest *tc) {
     FILE *fp = fopen("sample.fh", "r");
     BufferedInputStream *in = buffered_input_stream_new(fp, DEFAULT_BUFFER_SIZE);
     Token *token;
-    StringBuffer *sb = new_default_string_buffer();
-    
-    init_lexer();
+    StringBuffer *sb = sbuf_new(1024);
     
     do {
-        token = read_token(in);
-        append_str(sb, token_to_s(token));
+        token = next_token(in);
+        sbuf_append(sb, token_to_s(token));
     } while (token != NULL);
     
-    CuAssertStrEquals(tc, "<id, if><id, a><reserved, ==><num, 2><id, do><id, a><reserved, =><num, 12345><id, else><id, b><reserved, =><id, a><id, end>", to_str(sb));
-    delete_string_buffer(sb);
-    destroy_lexer();
-}
-
-void _word_token(CuTest *tc) {
-    Token *token = word_new(ID, "foo");
-    CuAssertIntEquals(tc, ID, token->class);
-    CuAssertStrEquals(tc, "foo", token->value.word);
-    token_delete(token);
-}
-
-void test_number_token(CuTest *tc) {
-    int expected_number = 1234;
-    Token *token = number_new(expected_number);
-    CuAssertIntEquals(tc, NUMBER, token->class);
-    CuAssertIntEquals(tc, expected_number, token->value.number);
-    token_delete(token);
-}
-
-void test_dump_token_word(CuTest *tc) {
-    Token *token = word_new(ID, "foo");
-    CuAssertStrEquals(tc, "<id, foo>", token_to_s(token));
-    token_delete(token);
-}
-
-void test_should_return_NULL_if_there_is_no_more_token(CuTest *tc) {
-    //Lexer *lexer = lexer_new("empty.fh");
-    //Token *token = lexer->read_token();
-    //CuAssertPtrNull(tc, token);
-    //lexer_delete(lexer);
+    CuAssertStrEquals(tc, "<if><id, a><==><num, 2><do><id, a><=><num, 12345><else><id, b><=><id, a><end>", to_str(sb));
+    sbuf_delete(sb);
 }

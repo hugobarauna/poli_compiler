@@ -59,8 +59,8 @@ namespace "test" do |namespace|
   end
 
   desc "Run lexer tests"
-  task :lexer => ["lexer_test.o", "lexer.o", "string_buffer.o", "fa.o", "error.o", 
-                    "bufstream.o", "xstring.o", "alloc.o", "CuTest.o"] do |t|
+  task :lexer => ["lexer_test.o", "lexer.o", "string_buffer.o", "error.o", 
+                    "bufstream.o", "xstring.o", "alloc.o", "hashtable.o", "CuTest.o"] do |t|
       generated_test_file = make_tests('test/lexer_test.c')
       sh "gcc #{ARGS} -c #{generated_test_file}"
       sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_lexer_test.o -o bin/#{t.name}"
