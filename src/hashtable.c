@@ -3,6 +3,13 @@
 
 static Entry* new_entry(KEY key, VALUE value);
 
+static int str_hash(char *str) {
+    int result = 0;
+    char *ptr = str;
+    for (; *ptr; ptr++)
+        result = 17 * result + *ptr;
+    return result;
+}
 
 Hashtable* hashtable_new(unsigned int size) {
   Hashtable *new_ht = (Hashtable *)malloc(sizeof(Hashtable));
@@ -18,11 +25,14 @@ Hashtable* hashtable_new(unsigned int size) {
   // set table entry pointers to NULL
   memset(new_ht->entries, 0, entries_list_size);
 
+  new_ht->hashing_function = str_hash;
+
   return new_ht;
 }
 
 void hashtable_delete(Hashtable *table) {
-  for (int i = 0; i < table->size; i++) 
+  int i;
+  for (i = 0; i < table->size; i++) 
     free(table->entries[i]);
 
   free(table);
