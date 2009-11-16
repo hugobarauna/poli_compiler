@@ -49,7 +49,7 @@ void test_unread_a_char_from_file(CuTest *tc)
     setup();
     ch = read(in);
     unread(ch, in);
-    CuAssertIntEquals(tc, ch, look(in));
+    CuAssertIntEquals(tc, ch, read(in));
     teardown();
 }
 

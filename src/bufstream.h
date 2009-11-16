@@ -17,7 +17,6 @@ typedef struct buffered_input_stream {
 BufferedInputStream *buffered_input_stream_new(FILE *, int);
 void buffered_input_stream_delete(BufferedInputStream *);
 int read(BufferedInputStream *);
-int look(BufferedInputStream *);
 int finished(BufferedInputStream *);
 void unread(int, BufferedInputStream *);
 char *readline(BufferedInputStream *);

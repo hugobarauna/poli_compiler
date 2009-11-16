@@ -4,6 +4,8 @@
 #include "bufstream.h"
 #include "error.h"
 
+static void fill(BufferedInputStream *);
+
 /*
  * Creates a new BufferedInputStream from a File Input Stream
  * with a specific buffer size.
@@ -83,14 +85,6 @@ static void fill(BufferedInputStream *input)
 }
 
 /*
- * Look at the current character in buffer.
- */
-int look(BufferedInputStream *input)
-{
-  return input->buf[input->pos];
-}
-
-/*
  * Checks if the buffer is ended (EOF).
  */
 int finished(BufferedInputStream *input)
@@ -109,6 +103,7 @@ int read(BufferedInputStream *input)
     if (input->pos >= input->count)
       return EOF;
   }
+  //printf("[%c]", input->buf[input->pos]);
   return (unsigned char)input->buf[input->pos++];
 }
 
