@@ -2,3 +2,4 @@ bin/*
 *.o
 .DS_Store
 tmp/*
+test/cu_all_test.c
