@@ -76,6 +76,7 @@ namespace "test" do |namespace|
   end
 
   test_tasks = namespace.tasks.inject([]) { |tasks, task| tasks.concat(task.prerequisites) }
+  test_tasks.delete("clean")
   test_tasks.uniq!
   # This task must be defined after all tests
   desc "Run all tests"
@@ -132,7 +133,25 @@ rule '.o' => lambda{ |objfile| find_deps(objfile) } do |t|
 end
 
 
-# Helper methods
+########################
+#   Helpers methods   ##
+########################
+
+
+# This methods finds all the source files that a CuTest unit test object file 
+# can depends on.
+# For example:
+#   find_deps('hashtable_test.o')
+#     => ['src/hashtable.c', 'test/hashtable_test.c']
+#
+def find_deps(object_file)
+  base = File.basename(object_file, '.o')
+
+  SRC.find_all do |source| 
+    File.basename(source, '.c') == base || 
+        File.basename(source, '.c') == base.sub(/_test/, '')
+  end
+end
 
 def make_tests(test_file=nil)
   test_names = []
@@ -173,21 +192,6 @@ def retrieve_tests(test_file)
   end
   f.close
   test_names
-end
-
-# This methods finds all the source files that a CuTest unit test object file 
-# can depends on.
-# For example:
-#   find_deps('hashtable_test.o')
-#     => ['src/hashtable.c', 'test/hashtable_test.c']
-#
-def find_deps(object_file)
-  base = File.basename(object_file, '.o')
-
-  SRC.find_all do |source| 
-    File.basename(source, '.c') == base || 
-        File.basename(source, '.c') == base.sub(/_test/, '')
-  end
 end
 
 
