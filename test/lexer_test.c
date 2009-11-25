@@ -12,7 +12,7 @@ static char *token_to_s(Token *token) {
     sbuf_append(sb, "<");
     switch (token->class)
     {
-        case ID:
+        case IDENTIFIER:
         sbuf_append(sb, "id, ");
         sbuf_append(sb, token->value);
         break;

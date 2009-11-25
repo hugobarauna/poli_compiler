@@ -7,7 +7,7 @@
 #include "lexer.h"
 
 static Hashtable *ht = NULL;
-static int loaded = 0;
+static int is_reserved_tokens_loaded = 0;
 
 static Token *retrieve_token(token_t type, char *str)
 {
@@ -30,7 +30,7 @@ static Token *retrieve_token(token_t type, char *str)
   case T_IDENTIFIER:
     token = hashtable_get(ht, symbol);
     if (token == NULL) {
-      token = token_new(ID, symbol);
+      token = token_new(IDENTIFIER, symbol);
       hashtable_insert(ht, symbol, token);
     }
     break;
@@ -177,9 +177,9 @@ Token *next_token(BufferedInputStream *stream)
   token_t type = T_SYMBOL;
   int ch;
 
-  if (!loaded) {
+  if (!is_reserved_tokens_loaded) {
     load_reserved_tokens();
-    loaded = 1;
+    is_reserved_tokens_loaded = 1;
   }
 
   if (finished(stream)) return NULL;

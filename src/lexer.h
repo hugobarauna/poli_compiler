@@ -4,7 +4,7 @@
 #include "bufstream.h"
 
 typedef enum e_tag {
-  ID,
+  IDENTIFIER,
   OPERATION,
   STRING,
   NUMBER,
