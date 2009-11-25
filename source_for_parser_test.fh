@@ -1,1 +1,2 @@
-variable = expressionTest;
+variable = hugo + fabio + ricardo;
+one = two - three;
