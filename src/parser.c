@@ -14,6 +14,8 @@ int is_assignment(BufferedInputStream *stream) {
 	int current_state = 0;
 	
 	while(1) {
+	  if (token == NULL)
+      return 0;
     // printf("<%d>", current_state);
 		switch (current_state) {
 			case 0:
@@ -21,7 +23,7 @@ int is_assignment(BufferedInputStream *stream) {
 					current_state = 1;
 				else
 					return 0;
-					token = next_token(stream);
+				token = next_token(stream);
 				break;
 			case 1:
 				if (token->class == ASSIGN)
@@ -32,9 +34,15 @@ int is_assignment(BufferedInputStream *stream) {
 				break;
 			case 2:
 				if (is_expr(stream))
-					return 1;
+          current_state = 3;
 				else
-					return 0;
+          return 0;
+        token = next_token(stream);
+        break;
+      case 3:
+        if (token->class == SEMICOLON)
+          return 1;
+        break;
 		}
 	}
 }
