@@ -1,3 +1,5 @@
 assignment = IDENTIFIER "=" expr ";".
+
 expr = factor { ( "*" | "/" | "+" | "-" ) factor } [ ( "<" | ">" | ">=" | "<=" | "==" | "!=" ) factor { ( "*" | "/" | "+" | "-" ) factor } ].
-factor = NUMBER | IDENTIFIER "[" NUMBER "]" | ( OPERATION | IDENTIFIER ) "(" [ ( IDENTIFIER | NUMBER ) { "," ( IDENTIFIER | NUMBER ) } ] ")" | "(" expr ")".
+
+factor = NUMBER | IDENTIFIER | IDENTIFIER "[" NUMBER "]" | ( OPERATION | IDENTIFIER ) "(" [ ( IDENTIFIER | NUMBER ) { "," ( IDENTIFIER | NUMBER ) } ] ")" | "(" expr ")".
