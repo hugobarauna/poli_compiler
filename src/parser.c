@@ -15,7 +15,7 @@ int is_assignment(BufferedInputStream *stream) {
 	
 	while (1) {
     // token = next_token(stream);
-    printf("Assigment, state: <%d>\n", current_state);	
+    printf("Assigment, state: <%d>, token: <%s>\n", current_state, token->value);	
 	  if (token == NULL)
       return 0;
 
@@ -37,6 +37,7 @@ int is_assignment(BufferedInputStream *stream) {
 			case 2:
 				if (is_expr(stream)) {
           current_state = 3;
+          continue;
         }
 				else
           return 0;
@@ -53,15 +54,17 @@ int is_expr(BufferedInputStream *stream) {
   int current_state = 0;
   
   while (1) {
-    printf("Expression, state: <%d>\n", current_state);	
+    printf("Expression, state: <%d>, token: <%s>\n", current_state, token->value);	
 
     if (token == NULL)
       return 0;
 
     switch (current_state) {
       case 0:
-        if (is_factor(stream))
+        if (is_factor(stream)) {
           current_state = 1;
+          continue;
+        }
         else
           return 0;
         break;
@@ -81,14 +84,15 @@ int is_expr(BufferedInputStream *stream) {
           case NE:
             current_state = 2;
           default:
-            token = next_token(stream);
             return 1;
         }
     	  token = next_token(stream);
         break;
       case 2:
-        if (is_factor(stream))
+        if (is_factor(stream)) {
           current_state = 3;
+          continue;
+        }
         else
           return 0;
         break;
@@ -113,7 +117,7 @@ int is_factor(BufferedInputStream *stream) {
   int current_state = 0;
   
   while (1) {
-    printf("Factor, state: <%d>\n", current_state);	
+    printf("Factor, state: <%d>, token: <%s>\n", current_state, token->value);	
     
     if (token == NULL)
       return 0;
@@ -155,8 +159,10 @@ int is_factor(BufferedInputStream *stream) {
           return 0;
         break;
       case 4:
-        if(is_expr(stream))
+        if(is_expr(stream)) {
           current_state = 5;
+          continue;
+        }
         else
           return 0;
         break;
