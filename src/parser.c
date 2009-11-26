@@ -1,3 +1,25 @@
+/*
+ALGORITH:
+ - condicao inicial: tenho um token lido
+ - para o nó raiz: (unico)
+    - se token eh NULL, so considero meu programa valido se
+      estou em estado final
+    - caso contrario meu programa esta errado
+    * para as demais maquinas, NULL eh considerado erro
+ - invariant: sempre leio token no final de toda submaquina
+ - no estado inicial da maquina, se nao consome nenhum token,
+   eh suposto que a sintaxe esta invalida, exceto para nó raiz
+ - nos estados:
+    - nas transicoes:
+      - se consome token, atualizo o current_state
+      - se chamada de submaquina, atualizo o current_state e 
+        uso continue; (para nao consumir token), se falhar, 
+        retorno 0 (erro)
+      - se for default
+        - estou num estado final, retorno 1 (sintaxe ok)
+        - caso contrario, retorno 0 (sintaxe invalida, tratar?)
+ */
+
 #include <stdio.h>
 
 #include "parser.h"
@@ -6,67 +28,71 @@
 static Token *token = NULL;
 
 int parse(BufferedInputStream *source_code_stream) {
-	token = next_token(source_code_stream);
-	return is_assignment(source_code_stream);
+  token = next_token(source_code_stream);
+  return is_assignment(source_code_stream);
 }
 
 int is_assignment(BufferedInputStream *stream) {
-	int current_state = 0;
-	
-	while (1) {
-    // token = next_token(stream);
-    printf("Assigment, state: <%d>, token: <%s>\n", current_state, token->value);	
-	  if (token == NULL)
-      return 0;
+  int current_state = 0;
+  
+  while (1) {
+    if (token == NULL) /* IS ROOT NODE */
+      return current_state == 4 ? 1 : 0; // IS FINAL STATE?
 
-		switch (current_state) {
-			case 0:
-				if (token->class == IDENTIFIER)
-					current_state = 1;
-				else
-					return 0;
-				token = next_token(stream);
-				break;
-			case 1:
-				if (token->class == ASSIGN)
-					current_state = 2;
-				else
-          return 0;
-        token = next_token(stream);
-				break;
-			case 2:
-				if (is_expr(stream)) {
+    printf("Assigment, state: <%d>, token: <%s>\n", current_state, token->value); 
+
+    switch (current_state) {
+      case 0:
+        if (token->class == IDENTIFIER)
+          current_state = 1;
+        else
+          return 0; /* ERROR: NOT FINAL STATE */
+        break;
+      case 1:
+        if (token->class == ASSIGN)
+          current_state = 2;
+        else
+          return 0; /* ERROR: NOT FINAL STATE */
+        break;
+      case 2:
+        if (is_expr(stream)) {
           current_state = 3;
-          continue;
+          continue; /* SUBMACHINE CALL, DO NOT CONSUME TOKEN */
         }
-				else
-          return 0;
+        else
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 3:
         if (token->class == SEMICOLON)
-          return 1;
+          current_state = 4;
+        else
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
-		}
-	}
+      case 4: /* ACCEPT: FINAL STATE */
+        return 1;
+    }
+    /* INVARIANT: always consume token */
+    token = next_token(stream);
+  }
 }
 
 int is_expr(BufferedInputStream *stream) {
   int current_state = 0;
   
   while (1) {
-    printf("Expression, state: <%d>, token: <%s>\n", current_state, token->value);	
-
     if (token == NULL)
-      return 0;
+      return 0; /* ERROR: NOT ROOT NODE */
+
+    printf("Expression, state: <%d>, token: <%s>\n", current_state, token->value);  
 
     switch (current_state) {
       case 0:
         if (is_factor(stream)) {
           current_state = 1;
-          continue;
+          continue; /* SUBMACHINE CALL, DO NOT CONSUME TOKEN */
         }
         else
-          return 0;
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 1:
         switch (token->class) {
@@ -83,18 +109,18 @@ int is_expr(BufferedInputStream *stream) {
           case EQ:
           case NE:
             current_state = 2;
+            break;
           default:
-            return 1;
+            return 1; /* ACCEPT: FINAL STATE */
         }
-    	  token = next_token(stream);
         break;
       case 2:
         if (is_factor(stream)) {
           current_state = 3;
-          continue;
+          continue; /* SUBMACHINE CALL, DO NOT CONSUME TOKEN */
         }
         else
-          return 0;
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 3:
         switch (token->class) {
@@ -103,13 +129,14 @@ int is_expr(BufferedInputStream *stream) {
           case ADD:
           case SUB:
             current_state = 2;
+            break;
           default:
-            token = next_token(stream);
-            return 1;
+            return 1; /* ACCEPT: FINAL STATE */
         }
-        token = next_token(stream);
         break;
     }
+    /* INVARIANT: always consume token */
+    token = next_token(stream);
   }
 }
 
@@ -117,18 +144,17 @@ int is_factor(BufferedInputStream *stream) {
   int current_state = 0;
   
   while (1) {
-    printf("Factor, state: <%d>, token: <%s>\n", current_state, token->value);	
-    
     if (token == NULL)
-      return 0;
+      return 0; /* ERROR: NOT ROOT TREE */
       
+    printf("Factor, state: <%d>, token: <%s>\n", current_state, token->value);  
+
     switch (current_state) {
       case 0:
         switch (token->class) {
           case NUMBER:
-            // current_state = 1;
-            token = next_token(stream);
-            return 1;
+            current_state = 1;
+            break;
           case IDENTIFIER:
             current_state = 2;
             break;
@@ -138,48 +164,46 @@ int is_factor(BufferedInputStream *stream) {
           case LPAR:
             current_state = 4;
             break;
-          default:
+          default: /* ERROR: NOT FINAL STATE */
             return 0;
         }
         break;
+      case 1:
+        return 1; /* ACCEPT: FINAL STATE */
       case 2:
         if (token->class == LBRA)
           current_state = 6;
         else if (token->class == LPAR)
           current_state = 7;
         else {
-          token = next_token(stream); 
-          return 1;
+          return 1; /* ACCEPT: FINAL STATE */
         }
         break;
       case 3:
         if (token->class == LPAR)
           current_state = 7;
         else
-          return 0;
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 4:
         if(is_expr(stream)) {
           current_state = 5;
-          continue;
+          continue; /* SUBMACHINE CALL, DO NOT CONSUME TOKEN */
         }
         else
-          return 0;
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 5:
-        if (token->class == RPAR) {
-          // current_state = 1;
-          token = next_token(stream);
-          return 1;
-        }
+        if (token->class == RPAR)
+          current_state = 1;
         else
-          return 0;
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 6:
         if (token->class == NUMBER)
           current_state = 10;
         else
-          return 0;
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 7:
         switch (token->class) {
@@ -188,41 +212,33 @@ int is_factor(BufferedInputStream *stream) {
             current_state = 8;
             break;
           case RPAR:
-            token = next_token(stream);
-            return 1;
-            // current_state = 1;
+            current_state = 1;
           default:
-            return 0;
+            return 0; /* ERROR: NOT FINAL STATE */
         }
         break;
       case 8:
         if (token->class == COMMA)
           current_state = 9;
-        else if (token->class == RPAR) {
-          // current_state = 1;
-          token = next_token(stream);
-          return 1;
-        }
+        else if (token->class == RPAR)
+          current_state = 1;
         else
-          return 0;
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 9:
         if (token->class == NUMBER || token->class == IDENTIFIER)
           current_state = 8;
         else
-          return 0;
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 10:
-        if (token->class == RBRA) {
-          // current_state = 1;
-          token = next_token(stream);
-          return 1;
-        }
+        if (token->class == RBRA)
+          current_state = 1;
         else
-          return 0;
+          return 0; /* ERROR: NOT FINAL STATE */
         break;
     }
-
-	  token = next_token(stream);
+    /* INVARIANT: always consume token */
+    token = next_token(stream);
   }
 }
