@@ -77,7 +77,8 @@ namespace "test" do |namespace|
   
   desc "Run parser tests"
   task :parser => ["parser_test.o", "parser.o", "lexer.o", "string_buffer.o", "error.o", 
-                   "bufstream.o", "xstring.o", "alloc.o", "hashtable.o", "CuTest.o"] do |t|
+                   "bufstream.o", "xstring.o", "alloc.o", "hashtable.o", "CuTest.o",
+                   "stack.o"] do |t|
     generated_test_file = make_tests('test/parser_test.c')
     sh "gcc #{ARGS} -c #{generated_test_file}"
     sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_parser_test.o -o bin/#{t.name}"

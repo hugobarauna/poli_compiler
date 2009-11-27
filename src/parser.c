@@ -24,20 +24,11 @@ ALGORITH:
 
 #include "parser.h"
 #include "lexer.h"
-
-static Token operators[1000];
-static Token operands[1000];
-static int operator_sp = 0;
-static int operand_sp = 0;
-
-/* STACKS */
-#define push_operator(v) (operators[operator_sp++] = (v))
-#define pop_operator  (operators[--operator_sp])
-
-#define push_operand(v) (operand[operand_sp++] = (v))
-#define pop_operand  (operand[--operand_sp])
+#include "stack.h"
 
 static Token *token = NULL;
+static Stack operators_stack;
+static Stack operands_stack;
 
 int parse(BufferedInputStream *source_code_stream) {
   token = next_token(source_code_stream);
