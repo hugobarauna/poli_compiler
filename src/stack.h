@@ -1,3 +1,6 @@
+#ifndef __STACK_H__
+#define __STACK_H__
+
 #define MAX 100
 typedef char* ItemType;
 
@@ -9,3 +12,5 @@ typedef struct {
 void stack_clean(Stack *s);
 void stack_push(ItemType item, Stack *s);
 ItemType stack_pop(Stack *s);
+
+#endif

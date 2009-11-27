@@ -21,14 +21,15 @@ ALGORITH:
  */
 
 #include <stdio.h>
-
 #include "parser.h"
-#include "lexer.h"
-#include "stack.h"
+
 
 static Token *token = NULL;
 static Stack operators_stack;
 static Stack operands_stack;
+
+static char *type_declared;
+extern int variables_counter;
 
 int parse(BufferedInputStream *source_code_stream) {
   token = next_token(source_code_stream);
@@ -61,6 +62,7 @@ int is_decl(BufferedInputStream *stream) {
       case 0:
         if (token->class == INT) {
           // register_type_decl
+          type_declared = token->value;
           current_state = 1;
         }
         else if (is_assignment(stream)) {
@@ -74,6 +76,7 @@ int is_decl(BufferedInputStream *stream) {
         if (token->class == IDENTIFIER) {
           // insert into symbol table and save its type (descriptor)
           // increment variable counter
+          variables_counter++;
           current_state = 3;
         }
         else
