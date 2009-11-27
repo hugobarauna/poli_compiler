@@ -1,5 +1,11 @@
+prog = { decl }.
+
+decl = "int" IDENTIFIER ";" | assignment.
+
+stmt = "if" "(" expr ")" "do" stmt [ "else" stmt ] "end" | "while" "(" expr ")" "do" stmt "end" | "return" [ expr ] | assignment.
+
 assignment = IDENTIFIER "=" expr ";".
 
 expr = factor { ( "*" | "/" | "+" | "-" ) factor } [ ( "<" | ">" | ">=" | "<=" | "==" | "!=" ) factor { ( "*" | "/" | "+" | "-" ) factor } ].
 
-factor = NUMBER | IDENTIFIER | IDENTIFIER "[" NUMBER "]" | ( OPERATION | IDENTIFIER ) "(" [ ( IDENTIFIER | NUMBER ) { "," ( IDENTIFIER | NUMBER ) } ] ")" | "(" expr ")".
+factor = NUMBER | IDENTIFIER | IDENTIFIER "[" NUMBER "]" | ( OPERATION | IDENTIFIER ) "(" [ ( IDENTIFIER | NUMBER ) { "," ( IDENTIFIER | NUMBER ) } ] ")" | "("expr ")".

@@ -137,7 +137,7 @@ int is_stmt(BufferedInputStream *stream) {
         break;
       case 4:
         return 1;
-      break;
+        break;
       case 5:
         if (is_expr(stream)) {
           current_state = 6;
