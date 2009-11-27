@@ -83,6 +83,14 @@ namespace "test" do |namespace|
     sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_parser_test.o -o bin/#{t.name}"
     sh "./bin/#{t.name}"
   end
+  
+  desc "Run stack tests"
+  task :stack => ["stack_test.o", "stack.o", "CuTest.o"] do |t|
+      generated_test_file = make_tests('test/stack_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_stack_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
 
   test_tasks = namespace.tasks.inject([]) { |tasks, task| tasks.concat(task.prerequisites) }
   test_tasks.delete("clean")
@@ -126,6 +134,7 @@ file "lexer_test.o"           => ["test/lexer_test.c", "src/lexer.c"]
 file "string_buffer_test.o"   => ["test/string_buffer_test.c", "src/string_buffer.c"]
 file "hashtable_test.o"       => ["test/hashtable_test.c", "src/hashtable.c"]
 file "parser_test.o"          => ["test/parser_test.c", "src/parser.c"]
+file "stack_test.o"           => ["test/stack_test.c", "src/stack.c"]
 
 
 

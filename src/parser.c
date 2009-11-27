@@ -57,6 +57,50 @@ int is_prog(BufferedInputStream *stream) {
   }
 }
 
+int is_decl(BufferedInputStream *stream) {
+  int current_state = 0;
+  
+  while (1) {
+    if (token == NULL)
+      return current_state == 2 ? 1 : 0;
+
+    printf("Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
+
+    switch (current_state) {
+      case 0:
+        if (token->class == INT) {
+          // register_type_decl
+          current_state = 1;
+        }
+        else if (is_assignment(stream)) {
+          current_state = 2;
+          continue;
+        }
+        else
+          return 0;
+        break;
+      case 1:
+        if (token->class == IDENTIFIER) {
+          // insert into symbol table and save its type (descriptor)
+          // increment variable counter
+          current_state = 3;
+        }
+        else
+          return 0;
+        break;
+      case 2:
+        return 1;
+      case 3:
+        if (token->class == SEMICOLON)
+          current_state = 2;
+        else
+          return 0;
+        break;
+    }
+    token = next_token(stream);
+  }
+}
+
 int is_stmt(BufferedInputStream *stream) {
   int current_state = 0;
   
@@ -175,50 +219,6 @@ int is_stmt(BufferedInputStream *stream) {
       break;
     }
     
-    token = next_token(stream);
-  }
-}
-
-int is_decl(BufferedInputStream *stream) {
-  int current_state = 0;
-  
-  while (1) {
-    if (token == NULL)
-      return current_state == 2 ? 1 : 0;
-
-    printf("Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
-
-    switch (current_state) {
-      case 0:
-        if (token->class == INT) {
-          // register_type_decl
-          current_state = 1;
-        }
-        else if (is_assignment(stream)) {
-          current_state = 2;
-          continue;
-        }
-        else
-          return 0;
-        break;
-      case 1:
-        if (token->class == IDENTIFIER) {
-          // insert into symbol table and save its type (descriptor)
-          // increment variable counter
-          current_state = 3;
-        }
-        else
-          return 0;
-        break;
-      case 2:
-        return 1;
-      case 3:
-        if (token->class == SEMICOLON)
-          current_state = 2;
-        else
-          return 0;
-        break;
-    }
     token = next_token(stream);
   }
 }
