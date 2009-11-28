@@ -22,7 +22,7 @@
 
 typedef void Descriptor;
 
-typedef enum e_type {
+typedef enum e_label_type {
   L_VARIABLE,
   L_CONSTANT
 } label_t;

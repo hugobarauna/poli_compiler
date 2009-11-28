@@ -34,8 +34,9 @@ int is_identifier_declared(char* id_name) {
 }
 
 char* generate_label(int counter, label_t type) {
-  char* label;
-  label = (char* ) malloc(5);
+  char* label = (char* ) malloc(5);
+  if (label == NULL)
+    fatal_error("failed: alloc label");
 
   switch (type) {
     case L_VARIABLE:
@@ -43,11 +44,12 @@ char* generate_label(int counter, label_t type) {
       break;
     case L_CONSTANT:
       strcpy(label, "C");
+      break;
     default:
       fatal_error("Error: invalid label type.");
   }
 
-  strcat(label, "0");
+  strcat(label, itoa(counter));
   return label;
 }
 
