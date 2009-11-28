@@ -40,3 +40,7 @@ ItemType *stack_lookup(Stack *s) {
     
   return s->items[s->top];
 }
+
+int stack_empty(Stack *s) {
+  return s->top == -1;
+}

@@ -39,3 +39,16 @@ void test_stack_lookup(CuTest *tc) {
   CuAssertStrEquals(tc, "word", item);
   CuAssertIntEquals(tc, 0, s.top);
 }
+
+void test_new_stack_empty(CuTest *tc) {
+  setup();
+  CuAssertTrue(tc, stack_empty(&s));
+}
+
+void test_stack_empty(CuTest *tc) {
+  setup();
+
+  stack_push("word", &s);
+  stack_pop(&s);
+  CuAssertTrue(tc, stack_empty(&s));
+}
