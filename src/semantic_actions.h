@@ -2,6 +2,7 @@
 #define __SEMANTIC_ACTIONS_H__
 
 #include "hashtable.h"
+#include "stack.h"
 
 #define SYM_TABLE_SIZE 100
 

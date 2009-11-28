@@ -95,7 +95,7 @@ namespace "test" do |namespace|
   
   desc "Run semantic actions tests"
   task :semantic_actions => ["semantic_actions_test.o", "semantic_actions.o", "CuTest.o",
-                             "hashtable.o"] do |t|
+                             "hashtable.o", "stack.o"] do |t|
       generated_test_file = make_tests('test/semantic_actions_test.c')
       sh "gcc #{ARGS} -c #{generated_test_file}"
       sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_semantic_actions_test.o -o bin/#{t.name}"

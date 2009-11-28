@@ -12,6 +12,7 @@
 extern int variables_counter;
 
 int parse(BufferedInputStream *source_code);
+int is_prog(BufferedInputStream *stream);
 int is_decl(BufferedInputStream *source_code);
 int is_program(BufferedInputStream *source_code);
 int is_stmt(BufferedInputStream *source_code);

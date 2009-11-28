@@ -2,9 +2,13 @@
 
 int variables_counter = 0;
 Hashtable *sym_table;
+Stack operators_stack;
+Stack operands_stack;
 
 void sym_table_initialize() {
   sym_table = hashtable_new(SYM_TABLE_SIZE);
+  stack_clean(&operators_stack);
+  stack_clean(&operands_stack);
 }
 
 void sym_table_insert(char* id_name, char* id_type, IdentifierDescriptor descriptor) {

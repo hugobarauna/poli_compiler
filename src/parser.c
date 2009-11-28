@@ -25,13 +25,14 @@ ALGORITH:
 
 
 static Token *token = NULL;
-static Stack operators_stack;
-static Stack operands_stack;
 
+extern Stack operators_stack;
+extern Stack operands_stack;
 static char *type_declared;
 extern int variables_counter;
 
 int parse(BufferedInputStream *source_code_stream) {
+  sym_table_initialize();
   token = next_token(source_code_stream);
   return is_prog(source_code_stream);
   //return is_assignment(source_code_stream);
@@ -75,7 +76,7 @@ int is_decl(BufferedInputStream *stream) {
       case 1:
         if (token->class == IDENTIFIER) {
           // insert into symbol table and save its type (descriptor)
-          // sym_table_insert(token->value, type_declared, VARIABLE);
+          sym_table_insert(token->value, type_declared, VARIABLE);
           // increment variable counter
           variables_counter++;
           current_state = 3;
@@ -232,6 +233,10 @@ int is_assignment(BufferedInputStream *stream) {
     switch (current_state) {
       case 0:
         if (token->class == IDENTIFIER)
+          // check if the identifier was declared
+
+          // "save" the identifier, so, later, it will can receive the expression
+          // calculated result
           current_state = 1;
         else
           return 0; /* ERROR: NOT FINAL STATE */
@@ -288,6 +293,7 @@ int is_expr(BufferedInputStream *stream) {
           case DIV:
           case ADD:
           case SUB:
+            // push the operand into the operands stack
             current_state = 0;
             break;
           case LT:
