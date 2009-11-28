@@ -18,7 +18,7 @@ void stack_clean(Stack *s) {
   s->top = -1;
 }
 
-void stack_push(ItemType item, Stack *s)
+void stack_push(ItemType *item, Stack *s)
 {
   s->top++;
   if( s->top == MAX )
@@ -27,16 +27,16 @@ void stack_push(ItemType item, Stack *s)
      s->items[s->top] = item; 
 }
 
-ItemType stack_pop(Stack *s) {
+ItemType *stack_pop(Stack *s) {
   if (s->top == -1)
     underflow();
-  else 
-    return s->items[s->top--];
+
+  return s->items[s->top--];
 }
 
-ItemType stack_lookup(Stack *s) {
+ItemType *stack_lookup(Stack *s) {
   if (s->top == -1)
     underflow(); /* actually, in that scenario, we don't have a real underflow */
-  else 
-    return s->items[s->top];
+    
+  return s->items[s->top];
 }
