@@ -1,0 +1,59 @@
+Registrador     Funcao
+-----------     -------
+MAR	            Registrador de endereco de memoria 
+MBR	            Registrador de dados da memoria 
+IC	            Registrador de endereco da proxima instrucao 
+IR	            Registrador de instrucao 
+OP	            Registrador de codigo de operacao 
+OI	            Registrador de operando de instrucao 
+RA	            Registrador de endereco de retorno AC Acumulador
+
+aula 2: OPcodes e mnemonicos
+aula 9: linguagem simbólica
+
+----------------------------------------------------
+
+int a;
+int b;
+int c;
+a = 2;
+b = 3;
+c = a + b;
+    
+	@ /0
+        LD  C0
+        MM	V0
+        LD	C1
+        MM	V1
+	    LD	V0
+	    +	V1
+	    MM	V2
+	    HM	/0
+
+	@ /256
+V0		K	/0
+V1		K	/0
+V2		K	/0
+C0      K   /2
+C1      K   /3
+
+
+
+
+    
+    
+----------------------------------------------------
+
+
+SymbolTable
+
+index pelo IDENTIFIER |  TYPE  |
+
+
+
+
+
+
+
+
+
