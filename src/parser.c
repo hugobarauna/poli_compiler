@@ -80,6 +80,7 @@ int is_decl(BufferedInputStream *stream) {
           variables_counter++;
           // insert into symbol table and save its type (descriptor)
           sym_table_insert(token->value, type_declared, VARIABLE);
+          // stack_push(&variables_stack, "V0")
           current_state = 3;
         }
         else
@@ -237,8 +238,6 @@ int is_assignment(BufferedInputStream *stream) {
           // check if the identifier was declared
           if (!is_identifier_declared(token->value))
             fatal_error("Identifier not declared.");
-          // "save" the identifier, so, later, it will can receive the expression
-          // calculated result
           current_state = 1;
         }
         else
@@ -364,8 +363,8 @@ int is_factor(BufferedInputStream *stream) {
             constants_counter++;
             // save the number value and associate it with the constant identifier label
             /* something like 
-                
-               stack_push(&constants_stack, token->value, constants_counter);
+               C0 /2
+               stack_push(&constants_stack, (token->value, constants_counter));
             */
             break;
           case IDENTIFIER:

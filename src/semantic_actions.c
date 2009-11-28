@@ -5,6 +5,10 @@ int constants_counter = -1;
 Hashtable *sym_table;
 Stack operators_stack, operands_stack, constants_stack, variables_stack;
 
+static SymTableEntry* new_sym_table_entry(char* id_name, char* id_type, 
+  IdentifierDescriptor descriptor);
+static void clean_stacks();
+
 void sym_table_initialize() {
   sym_table = hashtable_new(SYM_TABLE_SIZE);
   clean_stacks();

@@ -33,11 +33,6 @@ void sym_table_insert(char* id_name, char* id_type, IdentifierDescriptor descrip
 
 SymTableEntry* sym_table_get(char* id_name);
 
-static SymTableEntry* new_sym_table_entry(char* id_name, char* id_type, 
-  IdentifierDescriptor descriptor);
-  
 int is_identifier_declared(char* id_name);
-
-static void clean_stacks();
 
 #endif
