@@ -5,6 +5,7 @@
 #include "CuTest.h"
 
 extern void test_sym_table_insert_and_get(CuTest*);
+extern void test_sym_table_get_miss(CuTest*);
 
 
 void RunAllTests(void) 
@@ -13,6 +14,7 @@ void RunAllTests(void)
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST(suite, test_sym_table_insert_and_get);
+    SUITE_ADD_TEST(suite, test_sym_table_get_miss);
 
 
     CuSuiteRun(suite);

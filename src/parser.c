@@ -30,6 +30,7 @@ extern Stack operators_stack;
 extern Stack operands_stack;
 static char *type_declared;
 extern int variables_counter;
+extern int constants_counter;
 
 int parse(BufferedInputStream *source_code_stream) {
   sym_table_initialize();
@@ -75,10 +76,10 @@ int is_decl(BufferedInputStream *stream) {
         break;
       case 1:
         if (token->class == IDENTIFIER) {
-          // insert into symbol table and save its type (descriptor)
-          sym_table_insert(token->value, type_declared, VARIABLE);
           // increment variable counter
           variables_counter++;
+          // insert into symbol table and save its type (descriptor)
+          sym_table_insert(token->value, type_declared, VARIABLE);
           current_state = 3;
         }
         else
@@ -232,12 +233,14 @@ int is_assignment(BufferedInputStream *stream) {
 
     switch (current_state) {
       case 0:
-        if (token->class == IDENTIFIER)
+        if (token->class == IDENTIFIER) {
           // check if the identifier was declared
-
+          if (!is_identifier_declared(token->value))
+            fatal_error("Identifier not declared.");
           // "save" the identifier, so, later, it will can receive the expression
           // calculated result
           current_state = 1;
+        }
         else
           return 0; /* ERROR: NOT FINAL STATE */
         break;
@@ -250,6 +253,9 @@ int is_assignment(BufferedInputStream *stream) {
       case 2:
         if (is_expr(stream)) {
           current_state = 3;
+          /* after the expression is evaluated, its result will be on the
+             acumulator, so, now I can generate some code like this:
+             MM identifier_label*/
           continue; /* SUBMACHINE CALL, DO NOT CONSUME TOKEN */
         }
         else
@@ -292,8 +298,14 @@ int is_expr(BufferedInputStream *stream) {
           case MULT:
           case DIV:
           case ADD:
+            /* semantic action:
+              lookup operators stack and save it o Y
+              if Y in { +, -, *, / }
+                generate code
+              else
+                push Y into operators stack
+              */
           case SUB:
-            // push the operand into the operands stack
             current_state = 0;
             break;
           case LT:
@@ -348,9 +360,17 @@ int is_factor(BufferedInputStream *stream) {
         switch (token->class) {
           case NUMBER:
             current_state = 1;
+            // increment the constants counter
+            constants_counter++;
+            // save the number value and associate it with the constant identifier label
+            /* something like 
+                
+               stack_push(&constants_stack, token->value, constants_counter);
+            */
             break;
           case IDENTIFIER:
             current_state = 2;
+            // push the identifier into the operands stack
             break;
           case OPERATION:
             current_state = 3;

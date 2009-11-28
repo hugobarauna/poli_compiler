@@ -6,10 +6,9 @@
 #include "lexer.h"
 #include "stack.h"
 #include "semantic_actions.h"
+#include "error.h"
 
 /* VARIAVEIS, FUNCOES, VETOR */
-
-extern int variables_counter;
 
 int parse(BufferedInputStream *source_code);
 int is_prog(BufferedInputStream *stream);
