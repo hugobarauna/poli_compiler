@@ -7,6 +7,7 @@
 extern void test_stack_clean(CuTest*);
 extern void test_stack_push(CuTest*);
 extern void test_stack_pop(CuTest*);
+extern void test_stack_lookup(CuTest*);
 
 
 void RunAllTests(void) 
@@ -17,6 +18,7 @@ void RunAllTests(void)
     SUITE_ADD_TEST(suite, test_stack_clean);
     SUITE_ADD_TEST(suite, test_stack_push);
     SUITE_ADD_TEST(suite, test_stack_pop);
+    SUITE_ADD_TEST(suite, test_stack_lookup);
 
 
     CuSuiteRun(suite);

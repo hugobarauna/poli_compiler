@@ -11,6 +11,7 @@ typedef struct {
 
 void stack_clean(Stack *s);
 void stack_push(ItemType item, Stack *s);
+ItemType stack_lookup(Stack *s);
 ItemType stack_pop(Stack *s);
 
 #endif

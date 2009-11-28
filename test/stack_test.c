@@ -4,7 +4,7 @@
 
 static Stack s;
 
-void setup() {
+static void setup() {
   stack_clean(&s);
 }
 
@@ -21,11 +21,21 @@ void test_stack_push(CuTest *tc) {
 }
 
 void test_stack_pop(CuTest *tc) {
+  setup();
   char* item;
 
-  setup();
   stack_push("word", &s);
   item = stack_pop(&s);
   CuAssertStrEquals(tc, "word", item);
   CuAssertIntEquals(tc, -1, s.top);
+}
+
+void test_stack_lookup(CuTest *tc) {
+  setup();
+  char* item;
+
+  stack_push("word", &s);
+  item = stack_lookup(&s);
+  CuAssertStrEquals(tc, "word", item);
+  CuAssertIntEquals(tc, 0, s.top);
 }
