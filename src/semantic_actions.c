@@ -5,8 +5,7 @@ int constants_counter = -1;
 Hashtable *sym_table;
 Stack operators_stack, operands_stack, constants_stack, variables_stack;
 
-static SymTableEntry* new_sym_table_entry(char* id_name, char* id_type, 
-  IdentifierDescriptor descriptor);
+static SymTableEntry* new_sym_table_entry(char* id_name, char* label, Descriptor* descriptor);
 static void clean_stacks();
 
 void sym_table_initialize() {
@@ -18,8 +17,8 @@ void sym_table_initialize() {
   */
 }
 
-void sym_table_insert(char* id_name, char* id_type, IdentifierDescriptor descriptor) {
-  SymTableEntry* entry = new_sym_table_entry(id_name, id_type, descriptor);
+void sym_table_insert(char* id_name, char* label, Descriptor* descriptor) {
+  SymTableEntry* entry = new_sym_table_entry(id_name, label, descriptor);
   hashtable_insert(sym_table, id_name, entry);
 }
 
@@ -34,11 +33,28 @@ int is_identifier_declared(char* id_name) {
     return 0;
 }
 
-static SymTableEntry* new_sym_table_entry(char* id_name, char* id_type, 
-                                          IdentifierDescriptor descriptor) {
+char* generate_label(int counter, label_t type) {
+  char* label;
+  label = (char* ) malloc(5);
+
+  switch (type) {
+    case L_VARIABLE:
+      strcpy(label, "V");
+      break;
+    case L_CONSTANT:
+      strcpy(label, "C");
+    default:
+      fatal_error("Error: invalid label type.");
+  }
+
+  strcat(label, "0");
+  return label;
+}
+
+static SymTableEntry* new_sym_table_entry(char* id_name, char* label, Descriptor* descriptor) {
   SymTableEntry* entry = (SymTableEntry*) malloc(sizeof(SymTableEntry));
   entry->id_name = id_name;
-  entry->id_type = id_type;
+  entry->label = label;
   entry->descriptor = descriptor;
   return entry;                                           
 }

@@ -79,8 +79,8 @@ int is_decl(BufferedInputStream *stream) {
           // increment variable counter
           variables_counter++;
           // insert into symbol table and save its type (descriptor)
-          sym_table_insert(token->value, type_declared, VARIABLE);
-          // stack_push(&variables_stack, "V0")
+          sym_table_insert(token->value, generate_label(variables_counter, VARIABLE), NULL);
+          stack_push(&variables_stack, "V0",)
           current_state = 3;
         }
         else
@@ -254,6 +254,9 @@ int is_assignment(BufferedInputStream *stream) {
           current_state = 3;
           /* after the expression is evaluated, its result will be on the
              acumulator, so, now I can generate some code like this:
+             - pega o identificar da tabela de simbolos
+             - nesse identificador, tem que estar atrelado o label do .asm
+             
              MM identifier_label*/
           continue; /* SUBMACHINE CALL, DO NOT CONSUME TOKEN */
         }
