@@ -4,7 +4,7 @@
 
 #include "CuTest.h"
 
-extern void test_foo(CuTest*);
+extern void test_sym_table_insert_and_get(CuTest*);
 
 
 void RunAllTests(void) 
@@ -12,7 +12,7 @@ void RunAllTests(void)
     CuString *output = CuStringNew();
     CuSuite* suite = CuSuiteNew();
 
-    SUITE_ADD_TEST(suite, test_foo);
+    SUITE_ADD_TEST(suite, test_sym_table_insert_and_get);
 
 
     CuSuiteRun(suite);

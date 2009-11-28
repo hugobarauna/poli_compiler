@@ -32,14 +32,5 @@ void hashtable_insert(Hashtable *table, KEY key, VALUE value);
 
 VALUE hashtable_get(Hashtable *table, KEY key);
 
-// insert a <key, value> pair to hashtable
-//void hashtable_insert(Hashtable *ht, KEY *k, VALUE *v);
-
-// retrieve the value from key
-//VALUE hashtable_get(Hashtable *ht, KEY *k);
-
-/*TODO*/
-// free hashtable memory*/*/
-/*void free_hashtable(Hashtable *ht);*/
 
 #endif

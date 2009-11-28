@@ -75,6 +75,7 @@ int is_decl(BufferedInputStream *stream) {
       case 1:
         if (token->class == IDENTIFIER) {
           // insert into symbol table and save its type (descriptor)
+          // sym_table_insert(token->value, type_declared, VARIABLE);
           // increment variable counter
           variables_counter++;
           current_state = 3;
