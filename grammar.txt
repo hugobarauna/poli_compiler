@@ -18,9 +18,9 @@ SECOND DRAFT VERSION V1.0 (Complete Language)
 
 program = { external_decl }.
 
-external_decl = decl | (INT|VOID) ( OPERATION | IDENTIFIER ) "(" [ (INT|VOID) IDENTIFIER { "," (INT|VOID) IDENTIFIER } ] ")" "do" compound_stmt "end".
+external_decl = (INT|VOID) IDENTIFIER [ "=" ( expr ) ] ";" | (INT|VOID) IDENTIFIER "[" NUMBER "]" [ "=" "{" NUMBER { "," NUMBER } "}" ] ";" | (INT|VOID) ( OPERATION | IDENTIFIER ) "(" [ (INT|VOID) IDENTIFIER { "," (INT|VOID) IDENTIFIER } ] ")" "do" compound_stmt "end".
 
-decl = (INT|VOID) IDENTIFIER [ "=" ( IDENTIFIER | NUMBER | expr ) ] ";" | (INT|VOID) IDENTIFIER "[" NUMBER "]" [ "=" "{" NUMBER { "," NUMBER } "}" ] ";".
+decl = (INT|VOID) IDENTIFIER [ "=" ( expr ) ] ";" | (INT|VOID) IDENTIFIER "[" NUMBER "]" [ "=" "{" NUMBER { "," NUMBER } "}" ] ";".
 
 compound_stmt = {decl} {stmt}.
 

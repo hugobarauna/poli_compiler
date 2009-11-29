@@ -30,9 +30,10 @@ extern Stack operators_stack;
 extern Stack operands_stack;
 extern Stack variables_stack;
 extern Stack constants_stack;
-static class_t type_declared;
+extern class_t type_declared;
 extern int variables_counter;
 extern int constants_counter;
+extern char* lvalue;
 
 int parse(BufferedInputStream *source_code_stream) {
   semantic_initialize();
@@ -68,7 +69,7 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
     if (token == NULL)
       return current_state == 6 ? 1 : 0;
 
-    printf("External Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
+    //printf("External Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
 
     switch (current_state) {
     case 0:
@@ -80,11 +81,12 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
         return 0;
       break;
     case 1:
-      if (token->class == OPERATION)
-        current_state = 3;
-      else if (token->class == IDENTIFIER) {
+      if (token->class == IDENTIFIER) {
+        declaration_semantic_action(token->value);
         current_state = 2;
       }
+      else if (token->class == OPERATION)
+        current_state = 3;
       else
         return 0;
       break;
@@ -94,6 +96,7 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
         current_state = 5;
         break;
       case LPAR:
+        remove_stack_variable_semantic_action();
         current_state = 4;
         break;
       case LBRA:
@@ -198,8 +201,10 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       else return 0;
       break;
     case 18:
-      if (token->class == INT || token->class == VOID)
+      if (token->class == INT || token->class == VOID) {
+        type_declared = token->class;
         current_state = 8;
+      }
       else return 0;
       break;
     case 19:
@@ -219,7 +224,7 @@ int is_decl(BufferedInputStream *source_code_stream) {
     if (token == NULL)
       return current_state == 4 ? 1 : 0;
 
-    printf("Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
+    //printf("Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
 
     switch (current_state) {
     case 0:
@@ -227,14 +232,14 @@ int is_decl(BufferedInputStream *source_code_stream) {
         type_declared = token->class;
         current_state = 1;
       }
-      else
-        return 0;
+      else return 0;
       break;
     case 1:
-      if (token->class == IDENTIFIER)
+      if (token->class == IDENTIFIER) {
+        declaration_semantic_action(token->value);
         current_state = 2;
-      else
-        return 0;
+      }
+      else return 0;
       break;
     case 2:
       if (token->class == ASSIGN)
@@ -243,8 +248,7 @@ int is_decl(BufferedInputStream *source_code_stream) {
         current_state = 4;
       else if (token->class == LBRA)
         current_state = 5;
-      else
-  return 0;
+      else return 0;
       break;
     case 3:
       if (is_expr(source_code_stream)) {
@@ -310,7 +314,7 @@ int is_compound_stmt(BufferedInputStream *source_code_stream) {
     if (token == NULL) 
       return 1;
 
-    printf("Compound Stmt, state: <%d>, token: <%s>\n", current_state, token->value); 
+    //printf("Compound Stmt, state: <%d>, token: <%s>\n", current_state, token->value); 
 
     switch (current_state) {
     case 0:
@@ -344,7 +348,7 @@ int is_stmt(BufferedInputStream *stream) {
     if (token == NULL)
       return 0;
     
-    printf("Statement, state: <%d>, token: <%s>\n", current_state, token->value); 
+    //printf("Statement, state: <%d>, token: <%s>\n", current_state, token->value); 
     
     switch (current_state) {
     case 0:
@@ -368,8 +372,11 @@ int is_stmt(BufferedInputStream *stream) {
       else return 0;
       break;
     case 2:
-      if (token->class == SEMICOLON)
+      if (token->class == SEMICOLON) {
+        end_expr_semantic_action();
+        generate_assignment_code();
         current_state = 12;
+      }
       else return 0;
       break;
     case 3:
@@ -471,51 +478,6 @@ int is_stmt(BufferedInputStream *stream) {
   }
 }
 
-int is_assignment(BufferedInputStream *stream) {
-  int current_state = 0;
-  //char *lvalue = "ERROR";
-  
-  while (1) {
-    if (token == NULL) /* IS ROOT NODE */
-      //return 0;
-      return current_state == 4 ? 1 : 0; // IS FINAL STATE?
-
-
-    printf("Assigment, state: <%d>, token: <%s>\n", current_state, token->value); 
-
-    switch (current_state) {
-    case 0:
-      if (token->class == IDENTIFIER) {
-        current_state = 1;
-      }
-      else return 0; /* ERROR: NOT FINAL STATE */
-      break;
-    case 1:
-      if (token->class == ASSIGN)
-        current_state = 2;
-      else return 0; /* ERROR: NOT FINAL STATE */
-      break;
-    case 2:
-      if (is_expr(stream)) {
-        current_state = 3;
-        continue; /* SUBMACHINE CALL, DO NOT CONSUME TOKEN */
-      }
-      else return 0; /* ERROR: NOT FINAL STATE */
-      break;
-    case 3:
-      if (token->class == SEMICOLON) {
-        current_state = 4;
-      }
-      else return 0; /* ERROR: NOT FINAL STATE */
-      break;
-    case 4: /* ACCEPT: FINAL STATE */
-      return 1;
-    }
-    /* INVARIANT: always consume token */
-    token = next_token(stream);
-  }
-}
-
 int is_expr(BufferedInputStream *stream) {
   int current_state = 0;
   
@@ -523,7 +485,7 @@ int is_expr(BufferedInputStream *stream) {
     if (token == NULL)
       return 0; /* ERROR: NOT ROOT NODE */
 
-    printf("Expression, state: <%d>, token: <%s>\n", current_state, token->value);  
+    //printf("Expression, state: <%d>, token: <%s>\n", current_state, token->value);  
 
     switch (current_state) {
       case 0:
@@ -537,12 +499,12 @@ int is_expr(BufferedInputStream *stream) {
       switch (token->class) {
       case MULT:
       case DIV:
-
+        mult_div_semantic_action(token->value);
         current_state = 2;
         break;
       case ADD:
       case SUB:
-
+        add_sub_semantic_action(token->value);
         current_state = 2;
         break;
       case LT:
@@ -554,10 +516,11 @@ int is_expr(BufferedInputStream *stream) {
         current_state = 3;
         break;
       case ASSIGN:
+        pop_lvalue_semantic_action();
         current_state = 4;
         break;
       default:
-      printf("here");
+        //end_expr_semantic_action();
         return 1; /* ACCEPT: FINAL STATE */
       }
       break;
@@ -584,10 +547,12 @@ int is_expr(BufferedInputStream *stream) {
       switch (token->class) {
       case MULT:
       case DIV:
+        mult_div_semantic_action(token->value);
         current_state = 2;
         break;
       case ADD:
       case SUB:
+        add_sub_semantic_action(token->value);
         current_state = 2;
         break;
       case LT:
@@ -608,10 +573,12 @@ int is_expr(BufferedInputStream *stream) {
       switch (token->class) {
         case MULT:
         case DIV:
+          mult_div_semantic_action(token->value);
           current_state = 3;
           break;
         case ADD:
         case SUB:
+          add_sub_semantic_action(token->value);
           current_state = 3;
           break;
         default:
@@ -630,23 +597,24 @@ int is_factor(BufferedInputStream *stream) {
     if (token == NULL)
       return 0; /* ERROR: NOT ROOT TREE */
       
-    printf("Factor, state: <%d>, token: <%s>\n", current_state, token->value);  
+    //printf("Factor, state: <%d>, token: <%s>\n", current_state, token->value);  
 
     switch (current_state) {
     case 0:
       switch (token->class) {
       case NUMBER:
+        number_semantic_action(token->value);
         current_state = 1;
         break;
       case IDENTIFIER:
-            
+        identifier_semantic_action(token->value);
         current_state = 2;
         break;
       case OPERATION:
         current_state = 3;
         break;
       case LPAR:
-            
+        lpar_semantic_action(token->value);
         current_state = 4;
         break;
       default: /* ERROR: NOT FINAL STATE */
@@ -682,6 +650,7 @@ int is_factor(BufferedInputStream *stream) {
       break;
     case 5:
       if (token->class == RPAR) {
+        rpar_semantic_action();
         current_state = 1;
       }
       else return 0; /* ERROR: NOT FINAL STATE */

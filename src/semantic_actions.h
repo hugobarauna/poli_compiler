@@ -54,14 +54,27 @@ int is_identifier_declared(char* id_name);
 
 char* generate_label(int counter, label_t type);
 
+/* SEMANTIC ACTIONS */
+
+void declaration_semantic_action(char *identifier);
+void remove_stack_variable_semantic_action();
+void pop_lvalue_semantic_action();
+
+void number_semantic_action(char *);
+void identifier_semantic_action(char *);
+
+void lpar_semantic_action(char *);
+void rpar_semantic_action();
+
+void mult_div_semantic_action(char *operator);
+void add_sub_semantic_action(char *operator);
+
+void end_expr_semantic_action();
+
 /* CODE GENERATION */
 
 void generate_code();
-void mult_div_semantic_action(char *operator);
-void add_sub_semantic_action(char *operator);
-void rpar_semantic_action();  
-void end_expr_semantic_action();
-void generate_assignment_code(char *lvalue);
+void generate_assignment_code();
 void generate_end_program_code();
 void generate_data_definition_code();
 
