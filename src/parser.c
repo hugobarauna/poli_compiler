@@ -291,8 +291,9 @@ int is_assignment(BufferedInputStream *stream) {
           return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 3:
-        if (token->class == SEMICOLON)
+        if (token->class == SEMICOLON) {
           current_state = 4;
+        }
         else
           return 0; /* ERROR: NOT FINAL STATE */
         break;
@@ -327,37 +328,12 @@ int is_expr(BufferedInputStream *stream) {
         switch (token->class) {
           case MULT:
           case DIV:
-            item = stack_lookup(&operators_stack);
-            if (strcmp(item->label, "*") == 0 
-                || strcmp(item->label, "/") == 0)
-                generate_expr_code();
-
-            item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-            item->label = token->value; /* *, / */
-            item->value = NULL;
-            
-            stack_push(item, &operators_stack);
-            
+            mult_div_semantic_action(token->value);
             current_state = 0;
             break;
           case ADD:
           case SUB:
-          /* semantic action:
-            lookup operators stack and save it o Y
-            if Y in { +, -, *, / }
-              generate code
-            else
-              push Y into operators stack
-          */
-            if (!stack_empty(&operators_stack))
-              generate_expr_code();
-
-            item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-            item->label = token->value; /* +, - */
-            item->value = NULL;
-            
-            stack_push(item, &operators_stack);
-            
+            add_sub_semantic_action(token->value);
             current_state = 0;
             break;
           case LT:
@@ -369,7 +345,7 @@ int is_expr(BufferedInputStream *stream) {
             current_state = 2;
             break;
           default:
-            generate_expr_code();
+            end_expr_semantic_action();
             return 1; /* ACCEPT: FINAL STATE */
         }
         break;
@@ -385,11 +361,16 @@ int is_expr(BufferedInputStream *stream) {
         switch (token->class) {
           case MULT:
           case DIV:
+            mult_div_semantic_action(token->value);
+            current_state = 2;
+            break;
           case ADD:
           case SUB:
+            add_sub_semantic_action(token->value);
             current_state = 2;
             break;
           default:
+            end_expr_semantic_action();
             return 1; /* ACCEPT: FINAL STATE */
         }
         break;
@@ -433,10 +414,13 @@ int is_factor(BufferedInputStream *stream) {
             break;
           case IDENTIFIER:
             // push the identifier into the operands stack
+            if (!is_identifier_declared(token->value))
+              fatal_error("Identifier not declared.");
+            
             entry = sym_table_get(token->value);
             
             item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-            item->label = entry->label;
+            item->label = entry->label; /* LABEL ASSOCIATED TO VARIABLE */
             item->value = NULL;
             stack_push(item, &operands_stack);
             
@@ -446,10 +430,10 @@ int is_factor(BufferedInputStream *stream) {
             current_state = 3;
             break;
           case LPAR:
-            // item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-            // item->label = token->value; /* ( */
-            // item->value = NULL;
-            // stack_push(item, &operators_stack);
+            item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+            item->label = token->value; /* ( */
+            item->value = NULL;
+            stack_push(item, &operators_stack);
             
             current_state = 4;
             break;
@@ -462,15 +446,21 @@ int is_factor(BufferedInputStream *stream) {
       case 2:
         if (token->class == LBRA)
           current_state = 6;
-        else if (token->class == LPAR)
+        else if (token->class == LPAR) {
+          /* FUNCTION CALL */
+          
           current_state = 7;
+        }
         else {
           return 1; /* ACCEPT: FINAL STATE */
         }
         break;
       case 3:
-        if (token->class == LPAR)
+        if (token->class == LPAR) {
+          /* FUNCTION CALL */
+          
           current_state = 7;
+        }
         else
           return 0; /* ERROR: NOT FINAL STATE */
         break;
@@ -484,13 +474,7 @@ int is_factor(BufferedInputStream *stream) {
         break;
       case 5:
         if (token->class == RPAR) {
-          // item = stack_lookup(&operators_stack);
-          // printf("is NULL?? %d\n", item == NULL);
-          // if (strcmp(item->label, "(") == 0)
-          //   stack_pop(&operators_stack);
-          // else {
-          //   generate_expr_code();
-          // }
+          rpar_semantic_action();
           current_state = 1;
         }
         else
@@ -509,6 +493,7 @@ int is_factor(BufferedInputStream *stream) {
             current_state = 8;
             break;
           case RPAR:
+            /* END FUNCTION PARAMS */
             current_state = 1;
           default:
             return 0; /* ERROR: NOT FINAL STATE */
@@ -518,6 +503,7 @@ int is_factor(BufferedInputStream *stream) {
         if (token->class == COMMA)
           current_state = 9;
         else if (token->class == RPAR)
+          /* END FUNCTION PARAMS */
           current_state = 1;
         else
           return 0; /* ERROR: NOT FINAL STATE */

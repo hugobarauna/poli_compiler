@@ -36,7 +36,7 @@ ItemType *stack_pop(Stack *s) {
 
 ItemType *stack_lookup(Stack *s) {
   if (s->top == -1)
-    underflow(); /* actually, in that scenario, we don't have a real underflow */
+    return NULL;
     
   return s->items[s->top];
 }

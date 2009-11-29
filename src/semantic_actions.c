@@ -61,38 +61,81 @@ char* generate_label(int counter, label_t type) {
   return label;
 }
 
-void generate_expr_code() {
-  while (!stack_empty(&operators_stack)) {
-    // GERA CODIGO
-    VariableStackItem *lvalue, *rvalue, *operator;
-    VariableStackItem *temp;
-    
-    operator = stack_pop(&operators_stack);
-    printf("%s\n", operator->label);    
-    rvalue = stack_pop(&operands_stack);
-    printf("%s\n",rvalue->label);
-    lvalue = stack_pop(&operands_stack);
-    printf("%s\n", lvalue->label);
-    
-    fputs("\tLD\t", fp);
-    fputs(lvalue->label, fp);
-    fputs("\n\t", fp);
-    fputs(operator->label, fp);
-    fputs("\t", fp);
-    fputs(rvalue->label, fp);
-    fputs("\n", fp);
+void generate_code() {
+  // GERA CODIGO
+  VariableStackItem *lvalue, *rvalue, *operator;
+  VariableStackItem *temp;
+  
+  operator = stack_pop(&operators_stack);
+  rvalue = stack_pop(&operands_stack);
+  lvalue = stack_pop(&operands_stack);
+  
+  fputs("\tLD\t", fp);
+  fputs(lvalue->label, fp);
+  fputs("\n\t", fp);
+  fputs(operator->label, fp);
+  fputs("\t", fp);
+  fputs(rvalue->label, fp);
+  fputs("\n", fp);
 
-    temps_counter++;
-    temp = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-    temp->label = generate_label(temps_counter, L_TEMP);
-    temp->value = "0";
+  temps_counter++;
+  temp = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  temp->label = generate_label(temps_counter, L_TEMP);
+  temp->value = "0";
 
-    fputs("\tMM\t", fp);
-    fputs(temp->label, fp);
-    fputs("\n", fp);
+  fputs("\tMM\t", fp);
+  fputs(temp->label, fp);
+  fputs("\n", fp);
 
-    stack_push(temp, &variables_stack);
-    stack_push(temp, &operands_stack);
+  /* register temp variable to be generated on data segment */
+  stack_push(temp, &variables_stack);
+  stack_push(temp, &operands_stack);
+}
+
+void mult_div_semantic_action(char *operator) {
+  VariableStackItem *item = stack_lookup(&operators_stack);
+  if (item != NULL
+      && (strcmp(item->label, "*") == 0 
+      || strcmp(item->label, "/") == 0)) {
+      generate_code();
+      mult_div_semantic_action(operator);
+  }
+  else {
+    item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+    item->label = operator; /* *, / */
+    item->value = NULL;
+  
+    stack_push(item, &operators_stack);
+  }
+}
+
+void add_sub_semantic_action(char *operator) {
+  VariableStackItem *item = stack_lookup(&operators_stack);
+  if (item != NULL
+      && (strcmp(item->label, "*") == 0 
+      || strcmp(item->label, "/") == 0
+      || strcmp(item->label, "-") == 0
+      || strcmp(item->label, "+") == 0)) {
+    generate_code();
+    add_sub_semantic_action(operator);
+  }
+  else {
+    item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+    item->label = operator; /* +, - */
+    item->value = NULL;
+  
+    stack_push(item, &operators_stack);
+  }
+}
+
+void rpar_semantic_action() {
+  VariableStackItem *item = stack_lookup(&operators_stack);
+  if (item != NULL && strcmp(item->label, "(") != 0) {
+    generate_code();
+    rpar_semantic_action();
+  }
+  else {
+    stack_pop(&operators_stack);
   }
 }
 
@@ -111,6 +154,14 @@ void generate_assignment_code(char *lvalue) {
   fputs("\tMM\t", fp);
   fputs(lvalue, fp);
   fputs("\n", fp);
+}
+
+void end_expr_semantic_action() {
+  VariableStackItem *item = stack_lookup(&operators_stack);
+  while (item != NULL && strcmp(item->label, "(") != 0) {
+    generate_code();
+    item = stack_lookup(&operators_stack);
+  }
 }
 
 void generate_end_program_code() {

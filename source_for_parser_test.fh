@@ -3,8 +3,13 @@ int b;
 int c;
 a = 2;
 b = 3;
+c = ((a+b)*3/5+3)+((((3))));
+
+#c = (a +b);
+
+#c = a+b;
+
 # c = b - a + 2;
-c = 2+a*2 + 3*b;
 # c = 15 ou 0xF
 
 # expected
@@ -24,7 +29,7 @@ c = 2+a*2 + 3*b;
 # LD TEMP3
 # MM V2
 
-# c = (a+(2+a*b)*2 + 3) * b
+#c = (a+(2+a*b)*2 + 3) * b;
 # c = 63 ou 0x3f
 
 #expected
