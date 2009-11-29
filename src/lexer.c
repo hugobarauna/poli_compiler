@@ -60,6 +60,8 @@ static void load_reserved_tokens()
   hashtable_insert(ht, "bool", token_new(BOOL, "bool"));
   hashtable_insert(ht, "void", token_new(VOID, "void"));
   hashtable_insert(ht, "struct", token_new(STRUCT, "struct"));
+  hashtable_insert(ht, "scan", token_new(SCAN, "scan"));
+  hashtable_insert(ht, "print", token_new(PRINT, "print"));
   hashtable_insert(ht, "(", token_new(LPAR, "("));
   hashtable_insert(ht, ")", token_new(RPAR, ")"));
   hashtable_insert(ht, "{", token_new(LCUR, "{"));

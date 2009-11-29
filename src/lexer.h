@@ -20,6 +20,8 @@ typedef enum e_tag {
   BOOL,
   VOID,
   STRUCT,
+  SCAN,
+  PRINT,
   LPAR,
   RPAR,
   LCUR,

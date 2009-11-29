@@ -11,12 +11,13 @@
 /* VARIAVEIS, FUNCOES, VETOR */
 
 int parse(BufferedInputStream *source_code);
-int is_prog(BufferedInputStream *stream);
+int is_prog(BufferedInputStream *source_code);
+int is_external_decl(BufferedInputStream *source_code);
 int is_decl(BufferedInputStream *source_code);
-int is_program(BufferedInputStream *source_code);
+int is_compound_stmt(BufferedInputStream *source_code);
 int is_stmt(BufferedInputStream *source_code);
-int is_assignment(BufferedInputStream *stream);
-int is_expr(BufferedInputStream *stream);
-int is_factor(BufferedInputStream *stream);
+int is_assignment(BufferedInputStream *source_code);
+int is_expr(BufferedInputStream *source_code);
+int is_factor(BufferedInputStream *source_code);
 
 #endif
