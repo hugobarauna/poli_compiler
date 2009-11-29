@@ -1,3 +1,6 @@
+INITIAL DRAFT VERSION V0.1 (Simplified)
+---------------------------------------
+
 prog = { decl }.
 
 decl = "int" IDENTIFIER ";" | assignment.
@@ -9,3 +12,20 @@ assignment = IDENTIFIER "=" expr ";".
 expr = factor { ( "*" | "/" | "+" | "-" ) factor } [ ( "<" | ">" | ">=" | "<=" | "==" | "!=" ) factor { ( "*" | "/" | "+" | "-" ) factor } ].
 
 factor = NUMBER | IDENTIFIER | IDENTIFIER "[" NUMBER "]" | ( OPERATION | IDENTIFIER ) "(" [ ( IDENTIFIER | NUMBER ) { "," ( IDENTIFIER | NUMBER ) } ] ")" | "("expr ")".
+
+SECOND DRAFT VERSION V1.0 (Complete Language)
+---------------------------------------------
+
+program = { external_decl }.
+
+external_decl = decl | (INT|VOID) ( OPERATION | IDENTIFIER ) "(" [ (INT|VOID) IDENTIFIER { "," (INT|VOID) IDENTIFIER } ] ")" "do" compound_stmt "end".
+
+decl = (INT|VOID) IDENTIFIER [ "=" ( IDENTIFIER | NUMBER | expr ) ] ";" | (INT|VOID) IDENTIFIER "[" NUMBER "]" [ "=" "{" NUMBER { "," NUMBER } "}" ] ";".
+
+compound_stmt = {decl} {stmt}.
+
+stmt = "if" "(" expr ")" "do" compound_stmt [ "else" compound_stmt ] "end" | "while" "(" expr ")" "do" compound_stmt "end" | "return" [ expr ] ";" | expr ";" | (print|scan) "(" expr ")" ";".
+
+expr = factor { ( "*" | "/" | "+" | "-" ) factor } [ ( "<" | ">" | ">=" | "<=" | "==" | "!=" ) factor { ( "*" | "/" | "+" | "-" ) factor } ] | factor "=" expr.
+
+factor = NUMBER | IDENTIFIER | IDENTIFIER "[" NUMBER "]" | ( OPERATION | IDENTIFIER ) "(" [ expr { "," expr } ] ")" | "("expr ")".

@@ -15,16 +15,19 @@ int main() do
     int a = 0;
     int resultado = 0;
     scan(total);
-    
     while (a < total) do
         int k[2] = { 1, 2};
         a = soma(a, fator);
     end
     if (a == 10) do
       int b = 2;
-        # print_code(a+b);
+        print_code(a+b);
     else
-        print(a > 2);
+      if (a != b) do
+        print(a + 2);
+      else
+        print(b);
+      end
     end
     return 0;
 end
