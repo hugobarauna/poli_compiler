@@ -7,9 +7,11 @@ int constants_counter = -1;
 int ifs_counter = -1;
 int elses_counter = -1;
 int endifs_counter = -1;
+int whiles_counter = -1;
 int temps_counter = -1;
 Hashtable *sym_table;
 Stack operators_stack, operands_stack, constants_stack, variables_stack;
+Stack stmts_stack;
 char *lvalue = NULL;
 
 static SymTableEntry* new_sym_table_entry(char* id_name, char* label, Descriptor* descriptor);
@@ -21,7 +23,7 @@ void semantic_initialize() {
   sym_table = hashtable_new(SYM_TABLE_SIZE);
   clean_stacks();
   fp = fopen("out.asm", "w");
-  fputs("\t@ /0\n", fp);
+  fprintf(fp, "        @  /0\n");
   /* Maybe here, I already can open the output .asm file and write the first headers,
      somethin like this
            @ /0
@@ -90,22 +92,27 @@ void generate_code() {
   rvalue = stack_pop(&operands_stack);
   lvalue = stack_pop(&operands_stack);
   
-  fputs("\tLD\t", fp);
+ /* fputs("\tLD\t", fp);
   fputs(lvalue->label, fp);
   fputs("\n\t", fp);
   fputs(operator->label, fp);
   fputs("\t", fp);
   fputs(rvalue  ->label, fp);
   fputs("\n", fp);
-
+*/
   temps_counter++;
   temp = (VariableStackItem *)malloc(sizeof(VariableStackItem));
   temp->label = generate_label(temps_counter, L_TEMP);
   temp->value = "0";
+/*
 
   fputs("\tMM\t", fp);
   fputs(temp->label, fp);
   fputs("\n", fp);
+*/
+  fprintf(fp, "          LD  %s\n", lvalue->label);
+  fprintf(fp, "          %-2s  %s\n", operator->label, rvalue->label);
+  fprintf(fp, "          MM  %s\n", temp->label);
   
   printf("\t\t\t-----------------\n\t\t\t%s = %s %s %s\n\t\t\t-----------------\n", 
     temp->label, lvalue->label, operator->label, rvalue->label);
@@ -250,33 +257,83 @@ void lpar_semantic_action(char *symbol) {
   VariableStackItem *item;
   
   item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  item->label = symbol; /* ( */
+  item->label = "("; /* ( */
   item->value = NULL;
   
   stack_push(item, &operators_stack);
 }
 
+/* STMT */
+
 void if_semantic_action() {
-  VariableStackItem *item = stack_lookup(&operands_stack);
+  VariableStackItem *item = stack_pop(&operands_stack);
+  VariableStackItem *else_label = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  VariableStackItem *endif_label =  (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  
+  else_label->label = generate_label(++elses_counter, L_ELSE);
+  endif_label->label = generate_label(++endifs_counter, L_ENDIF);
+
+  stack_push(endif_label, &stmts_stack);
+  stack_push(else_label, &stmts_stack);
+
   printf("\t\t\tTrace: Result from expression is %s\n", item->label);
-  elses_counter++;
-  fputs("\tLD\t", fp);
-  fputs(item->label, fp);
-  fputs("\n", fp);
-  fputs("\tJZ\tELSE0\n", fp);
+  
+  fprintf(fp, "          LD  %s\n", item->label);
+  fprintf(fp, "          JZ  %s\n", else_label->label);
 }
 
 void else_semantic_action() {
-  endifs_counter++;
-  fputs("\tJP\tENDIF0\n", fp);
-  fputs("ELSE0", fp);
-  //fputs(elses_counter, fp);
+  VariableStackItem *else_label = stack_pop(&stmts_stack);
+  VariableStackItem *endif_label = stack_lookup(&stmts_stack);
+  
+  fprintf(fp, "          JP  %s\n", endif_label->label);
+  fprintf(fp, "%-10s", else_label->label);
 }
 
-void endif_semantic_action() {
-  endifs_counter++;
-  fputs("ENDIF0", fp);
-  //fputs(endifs_counter, fp);
+static int startswith(const char *a, const char *b) {
+  const char *ptr = b;
+  const char *ptr2 = a;
+  for (;*ptr;) {
+    if (*ptr2 == '\0') return 0;
+    else if (*ptr++ != *ptr2++) return 0;
+  }
+  return 1;
+}
+
+void end_semantic_action() {
+  VariableStackItem *top = stack_lookup(&stmts_stack);
+  if (startswith(top->label, "ENDWHILE")) {
+    VariableStackItem *endwhile_label = stack_pop(&stmts_stack);
+    VariableStackItem *while_label = stack_pop(&stmts_stack);
+    fprintf(fp, "          JP  %s\n", while_label->label);
+    fprintf(fp, "%-10s", endwhile_label->label);
+  } else {
+    VariableStackItem *endif_label = stack_pop(&stmts_stack);
+    fprintf(fp, "          JP  %s\n", endif_label->label);
+    fprintf(fp, "%-10s", endif_label->label);
+  }
+}
+
+void while_semantic_action() {
+  VariableStackItem *while_label = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  VariableStackItem *endwhile_label =  (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  
+  whiles_counter++;
+  while_label->label = generate_label(whiles_counter, L_WHILE);
+  endwhile_label->label = generate_label(whiles_counter, L_ENDWHILE);
+  
+  stack_push(while_label, &stmts_stack);
+  stack_push(endwhile_label, &stmts_stack);
+  
+  fprintf(fp, "          JP  %s\n", while_label->label);
+  fprintf(fp, "%-10s", while_label->label);
+}
+
+void stmt_expr_semantic_action() {
+  VariableStackItem *result = stack_pop(&operands_stack);
+  VariableStackItem *jump_label = stack_lookup(&stmts_stack);
+  fprintf(fp, "          LD  %s\n", result->label);
+  fprintf(fp, "          JZ  %s\n", jump_label->label);
 }
 
 /* CODE GENERATION */
@@ -295,38 +352,32 @@ void generate_assignment_code() {
   else
     printf("\t\t\t-----------------\n\t\t\t%s = (%s, %s)\n\t\t\t-----------------\n", lvalue, item->label, item->value);
 
-  fputs("\tLD\t", fp);
-  fputs(item->label, fp);
-  fputs("\n", fp);
-    
-  fputs("\tMM\t", fp);
-  fputs(lvalue, fp);
-  fputs("\n", fp);
+  fprintf(fp, "          LD  %s\n", item->label);
+  fprintf(fp, "          MM  %s\n", lvalue);
   
+  item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  item->label = lvalue;
+  item->value = NULL;
+  
+  stack_push(item, &operands_stack);
   /* PRE-CONDITION, while assign not found lvalue is NULL */
   lvalue = NULL;
 }
 
 void generate_end_program_code() {
-  fputs("\tHM /0\n", fp);
+  fprintf(fp, "          HM /0\n");
 }
 
 void generate_data_definition_code() {
-  fputs("\t@ /200\n", fp);
+  fprintf(fp, "          @   /200\n");
   while (!stack_empty(&variables_stack)) {
     VariableStackItem *item = (VariableStackItem *)stack_pop(&variables_stack);
-    fputs(item->label, fp);
-    fputs("\tK\t=", fp);
-    fputs(item->value, fp);
-    fputs("\n", fp);
+    fprintf(fp, "%-10sK   =%s\n", item->label, item->value);
   }
   
   while (!stack_empty(&constants_stack)) {
     VariableStackItem *item = (VariableStackItem *)stack_pop(&constants_stack);
-    fputs(item->label, fp);
-    fputs("\tK\t=", fp);
-    fputs(item->value, fp);
-    fputs("\n", fp);
+    fprintf(fp, "%-10sK   =%s\n", item->label, item->value);
   }
   fclose(fp);
 }
@@ -344,4 +395,5 @@ static void clean_stacks() {
   stack_clean(&operands_stack);
   stack_clean(&constants_stack);
   stack_clean(&variables_stack);
+  stack_clean(&stmts_stack);
 }

@@ -351,16 +351,17 @@ int is_stmt(BufferedInputStream *stream) {
     if (token == NULL)
       return 0;
     
-    //printf("Statement, state: <%d>, token: <%s>\n", current_state, token->value); 
+    printf("Statement, state: <%d>, token: <%s>\n", current_state, token->value); 
     
     switch (current_state) {
     case 0:
       if (token->class == IF) {
-        printf("IF FOUNDED\n");
         current_state = 1;
       }
-      else if (token->class == WHILE)
+      else if (token->class == WHILE) {
+        while_semantic_action();
         current_state = 3;
+      }
       else if (token->class == RETURN)
         current_state = 4;
       else if (token->class == SCAN || token->class == PRINT)
@@ -372,8 +373,9 @@ int is_stmt(BufferedInputStream *stream) {
       else return 0;
       break;
     case 1:
-      if (token->class == LPAR)
+      if (token->class == LPAR) {
         current_state = 6;
+      }
       else return 0;
       break;
     case 2:
@@ -399,13 +401,14 @@ int is_stmt(BufferedInputStream *stream) {
       else return 0;
       break;
     case 5:
-      if (token->class == LPAR)
+      if (token->class == LPAR) {
         current_state = 7;
+      }
       else return 0;
       break;
     case 6:
       if (is_expr(stream)) {
-        printf("EXPRESSION EVALUATED\n");
+        /* IF STMT */
         if_semantic_action();
         current_state = 8;
         continue;
@@ -420,13 +423,15 @@ int is_stmt(BufferedInputStream *stream) {
       else return 0;
       break;
     case 8:
-      if (token->class == RPAR)
+      if (token->class == RPAR) {
         current_state = 10;
+      }
       else return 0;
       break;
     case 9:
-      if (token->class == RPAR)
+      if (token->class == RPAR) {
         current_state = 2;
+      }
       else return 0;
       break;
     case 10:
@@ -462,26 +467,33 @@ int is_stmt(BufferedInputStream *stream) {
       break;
     case 15:
       if (token->class == END) {
-        endif_semantic_action();
+        end_semantic_action();
         current_state = 12;
       }
       else return 0;
       break;
     case 16:
       if (is_expr(stream)) {
+        /* WHILE STMT EXPR */
+        printf("HERE!!!!\n");
+        end_expr_semantic_action();
+        generate_assignment_code();
+        stmt_expr_semantic_action();
         current_state = 17;
         continue;
       }
       else return 0;
       break;
     case 17:
-      if (token->class == RPAR)
+      if (token->class == RPAR) {
         current_state = 18;
+      }
       else return 0;
       break;
     case 18:
-      if (token->class == DO)
+      if (token->class == DO) {
         current_state = 14;
+      }
       else return 0;
       break;
     }
@@ -496,7 +508,7 @@ int is_expr(BufferedInputStream *stream) {
     if (token == NULL)
       return 0; /* ERROR: NOT ROOT NODE */
 
-    //printf("Expression, state: <%d>, token: <%s>\n", current_state, token->value);  
+    printf("Expression, state: <%d>, token: <%s>\n", current_state, token->value);  
 
     switch (current_state) {
       case 0:
@@ -625,7 +637,7 @@ int is_factor(BufferedInputStream *stream) {
         current_state = 3;
         break;
       case LPAR:
-        lpar_semantic_action(token->value);
+        lpar_semantic_action();
         current_state = 4;
         break;
       default: /* ERROR: NOT FINAL STATE */

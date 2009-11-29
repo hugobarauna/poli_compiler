@@ -61,6 +61,12 @@ char* generate_label(int counter, label_t type);
 
 /* SEMANTIC ACTIONS */
 
+void while_semantic_action();
+void if_semantic_action();
+void else_semantic_action();
+void end_semantic_action();
+void stmt_expr_semantic_action();
+
 void declaration_semantic_action(char *identifier);
 void remove_stack_variable_semantic_action();
 void pop_lvalue_semantic_action();
@@ -68,7 +74,7 @@ void pop_lvalue_semantic_action();
 void number_semantic_action(char *);
 void identifier_semantic_action(char *);
 
-void lpar_semantic_action(char *);
+void lpar_semantic_action();
 void rpar_semantic_action();
 
 void mult_div_semantic_action(char *operator);
