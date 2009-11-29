@@ -1,0 +1,30 @@
+int fator = 1;
+
+int soma(int a, int b) do
+    return a + b;
+end
+
+int a[3] = { 1, 2, 3 };
+
+void print_code(int code) do
+  print(code);
+end
+
+int main() do
+    int total;
+    int a = 0;
+    int resultado = 0;
+    scan(total);
+    
+    while (a < total) do
+        int k[2] = { 1, 2};
+        a = soma(a, fator);
+    end
+    if (a == 10) do
+      int b = 2;
+        # print_code(a+b);
+    else
+        print(a > 2);
+    end
+    return 0;
+end
