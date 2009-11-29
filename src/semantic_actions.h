@@ -30,7 +30,12 @@ typedef struct _variable_stack_item {
 typedef enum e_label_type {
   L_VARIABLE,
   L_CONSTANT,
-  L_TEMP
+  L_TEMP,
+  L_IF,
+  L_ELSE,
+  L_ENDIF,
+  L_WHILE,
+  L_ENDWHILE
 } label_t;
 
 typedef struct _variable_descriptor {

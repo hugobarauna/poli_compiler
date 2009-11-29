@@ -33,6 +33,9 @@ extern Stack constants_stack;
 extern class_t type_declared;
 extern int variables_counter;
 extern int constants_counter;
+extern int ifs_counter;
+extern int elses_counter;
+extern int endifs_counter;
 extern char* lvalue;
 
 int parse(BufferedInputStream *source_code_stream) {
@@ -352,8 +355,10 @@ int is_stmt(BufferedInputStream *stream) {
     
     switch (current_state) {
     case 0:
-      if (token->class == IF)
+      if (token->class == IF) {
+        printf("IF FOUNDED\n");
         current_state = 1;
+      }
       else if (token->class == WHILE)
         current_state = 3;
       else if (token->class == RETURN)
@@ -400,6 +405,8 @@ int is_stmt(BufferedInputStream *stream) {
       break;
     case 6:
       if (is_expr(stream)) {
+        printf("EXPRESSION EVALUATED\n");
+        if_semantic_action();
         current_state = 8;
         continue;
       }
@@ -438,8 +445,10 @@ int is_stmt(BufferedInputStream *stream) {
     case 12:
       return 1;
     case 13:
-      if (token->class == ELSE)
+      if (token->class == ELSE) {
+        else_semantic_action();
         current_state = 14;
+      }
       else if (token->class == END)
         current_state = 12;
       else return 0;
@@ -452,8 +461,10 @@ int is_stmt(BufferedInputStream *stream) {
       else return 0;
       break;
     case 15:
-      if (token->class == END)
+      if (token->class == END) {
+        endif_semantic_action();
         current_state = 12;
+      }
       else return 0;
       break;
     case 16:

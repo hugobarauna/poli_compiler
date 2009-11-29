@@ -4,6 +4,9 @@
 class_t type_declared;
 int variables_counter = -1;
 int constants_counter = -1;
+int ifs_counter = -1;
+int elses_counter = -1;
+int endifs_counter = -1;
 int temps_counter = -1;
 Hashtable *sym_table;
 Stack operators_stack, operands_stack, constants_stack, variables_stack;
@@ -48,13 +51,28 @@ char* generate_label(int counter, label_t type) {
 
   switch (type) {
     case L_VARIABLE:
-      strcpy(label, "V");
+      strcpy(label, "VAR_");
       break;
     case L_CONSTANT:
-      strcpy(label, "C");
+      strcpy(label, "K_");
       break;
     case L_TEMP:
-      strcpy(label, "TEMP");
+      strcpy(label, "TEMP_");
+      break;
+    case L_IF:
+      strcpy(label, "IF_");
+      break;
+    case L_ELSE:
+      strcpy(label, "ELSE_");
+      break;
+    case L_ENDIF:
+      strcpy(label, "ENDIF_");
+      break;
+    case L_WHILE:
+      strcpy(label, "WHILE_");
+      break;
+    case L_ENDWHILE:
+      strcpy(label, "ENDWHILE_");
       break;
     default:
       fatal_error("Error: invalid label type.");
@@ -236,6 +254,29 @@ void lpar_semantic_action(char *symbol) {
   item->value = NULL;
   
   stack_push(item, &operators_stack);
+}
+
+void if_semantic_action() {
+  VariableStackItem *item = stack_lookup(&operands_stack);
+  printf("\t\t\tTrace: Result from expression is %s\n", item->label);
+  elses_counter++;
+  fputs("\tLD\t", fp);
+  fputs(item->label, fp);
+  fputs("\n", fp);
+  fputs("\tJZ\tELSE0\n", fp);
+}
+
+void else_semantic_action() {
+  endifs_counter++;
+  fputs("\tJP\tENDIF0\n", fp);
+  fputs("ELSE0", fp);
+  //fputs(elses_counter, fp);
+}
+
+void endif_semantic_action() {
+  endifs_counter++;
+  fputs("ENDIF0", fp);
+  //fputs(endifs_counter, fp);
 }
 
 /* CODE GENERATION */
