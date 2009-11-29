@@ -307,7 +307,6 @@ int is_assignment(BufferedInputStream *stream) {
 
 int is_expr(BufferedInputStream *stream) {
   int current_state = 0;
-  VariableStackItem *item = NULL;
   
   while (1) {
     if (token == NULL)

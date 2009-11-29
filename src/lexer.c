@@ -5,6 +5,7 @@
 #include "string_buffer.h"
 #include "bufstream.h"
 #include "lexer.h"
+#include "error.h"
 
 static Hashtable *ht = NULL;
 static int is_reserved_tokens_loaded = 0;

@@ -57,9 +57,9 @@ char* generate_label(int counter, label_t type);
 /* CODE GENERATION */
 
 void generate_code();
-void mult_div_generate_code(char *operator);
-void add_sub_generate_code(char *operator);
-void rpar_generate_code();  
+void mult_div_semantic_action(char *operator);
+void add_sub_semantic_action(char *operator);
+void rpar_semantic_action();  
 void end_expr_semantic_action();
 void generate_assignment_code(char *lvalue);
 void generate_end_program_code();

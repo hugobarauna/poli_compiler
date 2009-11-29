@@ -67,7 +67,6 @@ void test_transition_range_defition(CuTest *tc)
 
 void test_transition_with_escaped_char(CuTest *tc)
 {
-    int i;
     setup();
     fa_transition(m, 0, "\\-", 1, HALTNOAPPEND);
 
