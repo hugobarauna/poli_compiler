@@ -22,20 +22,32 @@ ALGORITH:
 
 #include <stdio.h>
 #include "parser.h"
+#include "string.h"
 
 
 static Token *token = NULL;
 
 extern Stack operators_stack;
 extern Stack operands_stack;
-static char *type_declared;
+extern Stack variables_stack;
+extern Stack constants_stack;
+static class_t type_declared;
 extern int variables_counter;
 extern int constants_counter;
 
 int parse(BufferedInputStream *source_code_stream) {
-  sym_table_initialize();
+  semantic_initialize();
   token = next_token(source_code_stream);
-  return is_prog(source_code_stream);
+  if (!is_prog(source_code_stream)) {
+    return 0;
+  }
+  
+  printf("program OK\n");
+  generate_end_program_code();
+  generate_data_definition_code();
+  
+  return 1;
+    
   //return is_assignment(source_code_stream);
 }
 
@@ -52,6 +64,7 @@ int is_prog(BufferedInputStream *stream) {
 }
 
 int is_decl(BufferedInputStream *stream) {
+  char *label = NULL;
   int current_state = 0;
   
   while (1) {
@@ -64,7 +77,7 @@ int is_decl(BufferedInputStream *stream) {
       case 0:
         if (token->class == INT) {
           // register_type_decl
-          type_declared = token->value;
+          type_declared = token->class;
           current_state = 1;
         }
         else if (is_assignment(stream)) {
@@ -76,11 +89,24 @@ int is_decl(BufferedInputStream *stream) {
         break;
       case 1:
         if (token->class == IDENTIFIER) {
+          VariableStackItem *item;
+          VariableDescriptor *descriptor;
+          
           // increment variable counter
           variables_counter++;
           // insert into symbol table and save its type (descriptor)
-          sym_table_insert(token->value, generate_label(variables_counter, VARIABLE), NULL);
-          stack_push(&variables_stack, "V0",)
+          label = generate_label(variables_counter, L_VARIABLE);
+          descriptor = (VariableDescriptor *)malloc(sizeof(VariableDescriptor));
+          descriptor->type = type_declared;
+          descriptor->default_value = "0";
+          
+          sym_table_insert(token->value, label, descriptor);
+          
+          item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+          item->label = label;
+          item->value = descriptor->default_value;
+          
+          stack_push(item, &variables_stack);
           current_state = 3;
         }
         else
@@ -223,6 +249,7 @@ int is_stmt(BufferedInputStream *stream) {
 
 int is_assignment(BufferedInputStream *stream) {
   int current_state = 0;
+  char *lvalue = "ERROR";
   
   while (1) {
     if (token == NULL) /* IS ROOT NODE */
@@ -235,9 +262,14 @@ int is_assignment(BufferedInputStream *stream) {
     switch (current_state) {
       case 0:
         if (token->class == IDENTIFIER) {
+          SymTableEntry *entry = NULL;
+          
           // check if the identifier was declared
           if (!is_identifier_declared(token->value))
             fatal_error("Identifier not declared.");
+          
+          entry = sym_table_get(token->value);
+          lvalue = entry->label;
           current_state = 1;
         }
         else
@@ -251,14 +283,9 @@ int is_assignment(BufferedInputStream *stream) {
         break;
       case 2:
         if (is_expr(stream)) {
-          current_state = 3;
-          /* after the expression is evaluated, its result will be on the
-             acumulator, so, now I can generate some code like this:
-             - pega o identificar da tabela de simbolos
-             - nesse identificador, tem que estar atrelado o label do .asm
-             
-             MM identifier_label*/
-          continue; /* SUBMACHINE CALL, DO NOT CONSUME TOKEN */
+           generate_assignment_code(lvalue);
+           current_state = 3;
+           continue; /* SUBMACHINE CALL, DO NOT CONSUME TOKEN */
         }
         else
           return 0; /* ERROR: NOT FINAL STATE */
@@ -279,6 +306,7 @@ int is_assignment(BufferedInputStream *stream) {
 
 int is_expr(BufferedInputStream *stream) {
   int current_state = 0;
+  VariableStackItem *item = NULL;
   
   while (1) {
     if (token == NULL)
@@ -299,15 +327,37 @@ int is_expr(BufferedInputStream *stream) {
         switch (token->class) {
           case MULT:
           case DIV:
+            item = stack_lookup(&operators_stack);
+            if (strcmp(item->label, "*") == 0 
+                || strcmp(item->label, "/") == 0)
+                generate_expr_code();
+
+            item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+            item->label = token->value; /* *, / */
+            item->value = NULL;
+            
+            stack_push(item, &operators_stack);
+            
+            current_state = 0;
+            break;
           case ADD:
-            /* semantic action:
-              lookup operators stack and save it o Y
-              if Y in { +, -, *, / }
-                generate code
-              else
-                push Y into operators stack
-              */
           case SUB:
+          /* semantic action:
+            lookup operators stack and save it o Y
+            if Y in { +, -, *, / }
+              generate code
+            else
+              push Y into operators stack
+          */
+            if (!stack_empty(&operators_stack))
+              generate_expr_code();
+
+            item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+            item->label = token->value; /* +, - */
+            item->value = NULL;
+            
+            stack_push(item, &operators_stack);
+            
             current_state = 0;
             break;
           case LT:
@@ -319,6 +369,7 @@ int is_expr(BufferedInputStream *stream) {
             current_state = 2;
             break;
           default:
+            generate_expr_code();
             return 1; /* ACCEPT: FINAL STATE */
         }
         break;
@@ -350,6 +401,8 @@ int is_expr(BufferedInputStream *stream) {
 
 int is_factor(BufferedInputStream *stream) {
   int current_state = 0;
+  VariableStackItem *item = NULL;
+  SymTableEntry *entry = NULL;
   
   while (1) {
     if (token == NULL)
@@ -361,23 +414,43 @@ int is_factor(BufferedInputStream *stream) {
       case 0:
         switch (token->class) {
           case NUMBER:
-            current_state = 1;
             // increment the constants counter
             constants_counter++;
             // save the number value and associate it with the constant identifier label
+
+            item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+            item->label = generate_label(constants_counter, L_CONSTANT);
+            item->value = token->value;
+
             /* something like 
                C0 /2
                stack_push(&constants_stack, (token->value, constants_counter));
             */
+            stack_push(item, &constants_stack);
+            stack_push(item, &operands_stack);
+            
+            current_state = 1;
             break;
           case IDENTIFIER:
-            current_state = 2;
             // push the identifier into the operands stack
+            entry = sym_table_get(token->value);
+            
+            item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+            item->label = entry->label;
+            item->value = NULL;
+            stack_push(item, &operands_stack);
+            
+            current_state = 2;
             break;
           case OPERATION:
             current_state = 3;
             break;
           case LPAR:
+            // item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+            // item->label = token->value; /* ( */
+            // item->value = NULL;
+            // stack_push(item, &operators_stack);
+            
             current_state = 4;
             break;
           default: /* ERROR: NOT FINAL STATE */
@@ -410,8 +483,16 @@ int is_factor(BufferedInputStream *stream) {
           return 0; /* ERROR: NOT FINAL STATE */
         break;
       case 5:
-        if (token->class == RPAR)
+        if (token->class == RPAR) {
+          // item = stack_lookup(&operators_stack);
+          // printf("is NULL?? %d\n", item == NULL);
+          // if (strcmp(item->label, "(") == 0)
+          //   stack_pop(&operators_stack);
+          // else {
+          //   generate_expr_code();
+          // }
           current_state = 1;
+        }
         else
           return 0; /* ERROR: NOT FINAL STATE */
         break;

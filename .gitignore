@@ -3,3 +3,6 @@ bin/*
 .DS_Store
 tmp/*
 test/cu_all_test.c
+*.asm
+*.mvn
+*.lst

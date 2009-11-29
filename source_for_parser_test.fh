@@ -3,4 +3,49 @@ int b;
 int c;
 a = 2;
 b = 3;
-c = a + b*3;
+# c = b - a + 2;
+c = 2+a*2 + 3*b;
+# c = 15 ou 0xF
+
+# expected
+#
+# LD V0
+# *  C3
+# MM TEMP0
+# LD C2
+# +  TEMP0
+# MM TEMP1
+# LD C4
+# *  V1
+# MM TEMP2
+# LD TEMP1
+# +  TEMP2
+# MM TEMP3
+# LD TEMP3
+# MM V2
+
+# c = (a+(2+a*b)*2 + 3) * b
+# c = 63 ou 0x3f
+
+#expected
+#
+# LD V0
+# *  V1
+# MM TEMP4
+# LD C5
+# +  TEMP4
+# MM TEMP5
+# LD TEMP5
+# *  C6
+# MM TEMP6
+# LD V0
+# +  TEMP6
+# MM TEMP7
+# LD TEMP7
+# +  C7
+# MM TEMP8
+# LD TEMP8
+# *  V1
+# MM TEMP9
+# LD TEMP9
+# MM V2

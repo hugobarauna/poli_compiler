@@ -22,9 +22,15 @@
 
 typedef void Descriptor;
 
+typedef struct _variable_stack_item {
+  char *label;
+  char *value;
+} VariableStackItem;
+
 typedef enum e_label_type {
   L_VARIABLE,
-  L_CONSTANT
+  L_CONSTANT,
+  L_TEMP
 } label_t;
 
 typedef struct _variable_descriptor {
@@ -38,7 +44,7 @@ typedef struct _sym_table_entry {
   Descriptor* descriptor;
 } SymTableEntry;
 
-void sym_table_initialize();
+void semantic_initialize();
 
 void sym_table_insert(char* id_name, char* label, Descriptor* descriptor);
 
@@ -47,5 +53,12 @@ SymTableEntry* sym_table_get(char* id_name);
 int is_identifier_declared(char* id_name);
 
 char* generate_label(int counter, label_t type);
+
+/* CODE GENERATION */
+
+void generate_expr_code();
+void generate_assignment_code(char *lvalue);
+void generate_end_program_code();
+void generate_data_definition_code();
 
 #endif

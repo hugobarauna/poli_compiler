@@ -2,15 +2,20 @@
 
 int variables_counter = -1;
 int constants_counter = -1;
+int temps_counter = -1;
 Hashtable *sym_table;
 Stack operators_stack, operands_stack, constants_stack, variables_stack;
 
 static SymTableEntry* new_sym_table_entry(char* id_name, char* label, Descriptor* descriptor);
 static void clean_stacks();
 
-void sym_table_initialize() {
+static FILE *fp = NULL;
+
+void semantic_initialize() {
   sym_table = hashtable_new(SYM_TABLE_SIZE);
   clean_stacks();
+  fp = fopen("out.asm", "w");
+  fputs("\t@ /0\n", fp);
   /* Maybe here, I already can open the output .asm file and write the first headers,
      somethin like this
            @ /0
@@ -34,7 +39,7 @@ int is_identifier_declared(char* id_name) {
 }
 
 char* generate_label(int counter, label_t type) {
-  char* label = (char* ) malloc(5);
+  char* label = (char* ) malloc(10);
   if (label == NULL)
     fatal_error("failed: alloc label");
 
@@ -45,12 +50,91 @@ char* generate_label(int counter, label_t type) {
     case L_CONSTANT:
       strcpy(label, "C");
       break;
+    case L_TEMP:
+      strcpy(label, "TEMP");
+      break;
     default:
       fatal_error("Error: invalid label type.");
   }
 
   strcat(label, itoa(counter));
   return label;
+}
+
+void generate_expr_code() {
+  while (!stack_empty(&operators_stack)) {
+    // GERA CODIGO
+    VariableStackItem *lvalue, *rvalue, *operator;
+    VariableStackItem *temp;
+    
+    operator = stack_pop(&operators_stack);
+    printf("%s\n", operator->label);    
+    rvalue = stack_pop(&operands_stack);
+    printf("%s\n",rvalue->label);
+    lvalue = stack_pop(&operands_stack);
+    printf("%s\n", lvalue->label);
+    
+    fputs("\tLD\t", fp);
+    fputs(lvalue->label, fp);
+    fputs("\n\t", fp);
+    fputs(operator->label, fp);
+    fputs("\t", fp);
+    fputs(rvalue->label, fp);
+    fputs("\n", fp);
+
+    temps_counter++;
+    temp = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+    temp->label = generate_label(temps_counter, L_TEMP);
+    temp->value = "0";
+
+    fputs("\tMM\t", fp);
+    fputs(temp->label, fp);
+    fputs("\n", fp);
+
+    stack_push(temp, &variables_stack);
+    stack_push(temp, &operands_stack);
+  }
+}
+
+void generate_assignment_code(char *lvalue) {
+  VariableStackItem *item = NULL;
+  
+  if (lvalue == NULL)
+    fatal_error("Error: lvalue should not be NULL");
+    
+  /* FINAL CONDITION: OPERANDS CONTAINS THE EXPR RESULT */
+  item = stack_pop(&operands_stack);
+  fputs("\tLD\t", fp);
+  fputs(item->label, fp);
+  fputs("\n", fp);
+    
+  fputs("\tMM\t", fp);
+  fputs(lvalue, fp);
+  fputs("\n", fp);
+}
+
+void generate_end_program_code() {
+  fputs("\tHM /0\n", fp);
+}
+
+void generate_data_definition_code() {
+  fputs("\t@ /200\n", fp);
+  while (!stack_empty(&variables_stack)) {
+    VariableStackItem *item = (VariableStackItem *)stack_pop(&variables_stack);
+    fputs(item->label, fp);
+    fputs("\tK\t=", fp);
+    fputs(item->value, fp);
+    fputs("\n", fp);
+  }
+  
+  while (!stack_empty(&constants_stack)) {
+    VariableStackItem *item = (VariableStackItem *)stack_pop(&constants_stack);
+    fputs(item->label, fp);
+    fputs("\tK\t=", fp);
+    fputs(item->value, fp);
+    fputs("\n", fp);
+  }
+  fclose(fp);
 }
 
 static SymTableEntry* new_sym_table_entry(char* id_name, char* label, Descriptor* descriptor) {
