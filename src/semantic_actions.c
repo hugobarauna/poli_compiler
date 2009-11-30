@@ -22,8 +22,22 @@ static void clean_stacks();
 static FILE *fp = NULL;
 
 void semantic_initialize() {
+  VariableStackItem *ktrue, *kfalse;
+  
   sym_table = hashtable_new(SYM_TABLE_SIZE);
   clean_stacks();
+  /* LOAD FIXED CONSTANTS */
+  ktrue = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  ktrue->label = "TRUE";
+  ktrue->value = "1";
+  
+  kfalse = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  kfalse->label = "FALSE";
+  kfalse->value = "0";
+  
+  stack_push(ktrue, &constants_stack);
+  stack_push(kfalse, &constants_stack);
+  
   fp = fopen("out.asm", "w");
   fprintf(fp, "        @  /0\n");
   /* Maybe here, I already can open the output .asm file and write the first headers,
@@ -382,9 +396,9 @@ void bool_expr_semantic_action() {
       fprintf(fp, "          LD  %s\n", lexpr->label);
       fprintf(fp, "          -   %s\n", rexpr->label);
       fprintf(fp, "          JZ  %s\n", ltrue);
-      fprintf(fp, "          LV  =0\n");
+      fprintf(fp, "          LD  FALSE\n");
       fprintf(fp, "          JP  %s\n", lfalse);
-      fprintf(fp, "%-10sLV  =1\n", ltrue);
+      fprintf(fp, "%-10sLD  TRUE\n", ltrue);
       fprintf(fp, "%-10sMM  %s\n", lfalse, temp->label);
       break;
     case NE:
@@ -399,9 +413,9 @@ void bool_expr_semantic_action() {
       fprintf(fp, "          LD  %s\n", lexpr->label);
       fprintf(fp, "          -   %s\n", rexpr->label);
       fprintf(fp, "          JZ  %s\n", lfalse);
-      fprintf(fp, "          LV  =1\n");
+      fprintf(fp, "          LD  TRUE\n");
       fprintf(fp, "          JP  %s\n", ltrue);
-      fprintf(fp, "%-10sLV  =0\n", lfalse);
+      fprintf(fp, "%-10sLD  FALSE\n", lfalse);
       fprintf(fp, "%-10sMM  %s\n", ltrue, temp->label);
       break;
     case LT:
@@ -415,17 +429,17 @@ void bool_expr_semantic_action() {
       //          -  #TEMP_1
       //          JN FALSE_0
       //          JZ FALSE_0
-      //          LV =1
+      //          LD TRUE
       //          JP TRUE_0
-      // FALSE_0  LV =0
+      // FALSE_0  LD FALSE
       // TRUE_0   MM #TEMP_2
       fprintf(fp, "          LD  %s\n", lexpr->label);
       fprintf(fp, "          -   %s\n", rexpr->label);
       fprintf(fp, "          JN  %s\n", lfalse);
       fprintf(fp, "          JZ  %s\n", lfalse);
-      fprintf(fp, "          LV  =1\n");
+      fprintf(fp, "          LD  TRUE\n");
       fprintf(fp, "          JP  %s\n", ltrue);
-      fprintf(fp, "%-10sLV  =0\n", lfalse);
+      fprintf(fp, "%-10sLD  FALSE\n", lfalse);
       fprintf(fp, "%-10sMM  %s\n", ltrue, temp->label);
       break;
     case LE:
@@ -445,9 +459,9 @@ void bool_expr_semantic_action() {
       fprintf(fp, "          LD  %s\n", lexpr->label);
       fprintf(fp, "          -   %s\n", rexpr->label);
       fprintf(fp, "          JN  %s\n", lfalse);
-      fprintf(fp, "          LV  =1\n");
+      fprintf(fp, "          LD  TRUE\n");
       fprintf(fp, "          JP  %s\n", ltrue);
-      fprintf(fp, "%-10sLV  =0\n", lfalse);
+      fprintf(fp, "%-10sLD  FALSE\n", lfalse);
       fprintf(fp, "%-10sMM  %s\n", ltrue, temp->label);
       break;
     default:

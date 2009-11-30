@@ -1,13 +1,7 @@
 int main() do
     int total;
     int a;
-    if (1 > 2) do
-      a = 20;
-    else
-      if (3 >= 3) do
-        a = 3;
-      else
-        a = 1;
-      end
-    end
+    total = 0;
+    a = 10;
+    total = a > 2;
 end
