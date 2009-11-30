@@ -381,6 +381,8 @@ int is_stmt(BufferedInputStream *stream) {
     case 2:
       if (token->class == SEMICOLON) {
         end_expr_semantic_action();
+        /* RESOLVE IF BOOL EXPR */
+        bool_expr_semantic_action();
         generate_assignment_code();
         current_state = 12;
       }
@@ -408,7 +410,12 @@ int is_stmt(BufferedInputStream *stream) {
       break;
     case 6:
       if (is_expr(stream)) {
-        /* IF STMT */
+        /* IF STMT EXPR */
+        end_expr_semantic_action();
+        /* RESOLVE IF BOOL EXPR */
+        bool_expr_semantic_action();
+        /* RESOLVE IF ASSIGN EXPR */
+        generate_assignment_code();
         if_semantic_action();
         current_state = 8;
         continue;
@@ -477,6 +484,9 @@ int is_stmt(BufferedInputStream *stream) {
         /* WHILE STMT EXPR */
         printf("HERE!!!!\n");
         end_expr_semantic_action();
+        /* RESOLVE IF BOOL EXPR */
+        bool_expr_semantic_action();
+        /* RESOLVE IF ASSIGN EXPR */
         generate_assignment_code();
         stmt_expr_semantic_action();
         current_state = 17;
@@ -536,6 +546,9 @@ int is_expr(BufferedInputStream *stream) {
       case LE:
       case EQ:
       case NE:
+        /* EVALUATES THE LEFT EXPR */
+        end_expr_semantic_action();
+        bool_operator_semantic_action(token);
         current_state = 3;
         break;
       case ASSIGN:

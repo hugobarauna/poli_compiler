@@ -9,7 +9,8 @@ static FILE *fp;
 static BufferedInputStream *in;
 
 static void setup() {
-	fp = fopen("source_for_semantic_test.fh", "r");
+	//fp = fopen("source_for_semantic_test.fh", "r");
+	fp = fopen("source_for_bool_expr_test.fh", "r");
 	in = buffered_input_stream_new(fp, BUFFER_SIZE);
 }
 

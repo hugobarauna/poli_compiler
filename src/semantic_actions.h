@@ -35,7 +35,9 @@ typedef enum e_label_type {
   L_ELSE,
   L_ENDIF,
   L_WHILE,
-  L_ENDWHILE
+  L_ENDWHILE,
+  L_TRUE,
+  L_FALSE
 } label_t;
 
 typedef struct _variable_descriptor {
@@ -81,6 +83,9 @@ void mult_div_semantic_action(char *operator);
 void add_sub_semantic_action(char *operator);
 
 void end_expr_semantic_action();
+
+void bool_operator_semantic_action(Token *token);
+void bool_expr_semantic_action();
 
 /* CODE GENERATION */
 

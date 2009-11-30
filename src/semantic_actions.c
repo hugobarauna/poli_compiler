@@ -8,10 +8,12 @@ int ifs_counter = -1;
 int elses_counter = -1;
 int endifs_counter = -1;
 int whiles_counter = -1;
+int bools_counter = -1;
 int temps_counter = -1;
 Hashtable *sym_table;
 Stack operators_stack, operands_stack, constants_stack, variables_stack;
 Stack stmts_stack;
+Token *bool_operator = NULL;
 char *lvalue = NULL;
 
 static SymTableEntry* new_sym_table_entry(char* id_name, char* label, Descriptor* descriptor);
@@ -75,6 +77,12 @@ char* generate_label(int counter, label_t type) {
       break;
     case L_ENDWHILE:
       strcpy(label, "ENDWHILE_");
+      break;
+    case L_TRUE:
+      strcpy(label, "TRUE_");
+      break;
+    case L_FALSE:
+      strcpy(label, "FALSE_");
       break;
     default:
       fatal_error("Error: invalid label type.");
@@ -334,6 +342,122 @@ void stmt_expr_semantic_action() {
   VariableStackItem *jump_label = stack_lookup(&stmts_stack);
   fprintf(fp, "          LD  %s\n", result->label);
   fprintf(fp, "          JZ  %s\n", jump_label->label);
+}
+
+void bool_operator_semantic_action(Token *token) {
+  if (bool_operator != NULL) {
+    fatal_error("Error: cannot have more than one boolean expression");
+  }
+  bool_operator = token;
+  printf("SETTED: %s\n", bool_operator->value);
+}
+
+void bool_expr_semantic_action() {
+  VariableStackItem *lexpr, *rexpr, *temp = NULL, *aux = NULL;
+  char *ltrue, *lfalse;
+  if (bool_operator == NULL) return; /* NOT AN BOOL EXPR */
+  
+  // lexpr < rexpr
+  rexpr = stack_pop(&operands_stack);
+  lexpr = stack_pop(&operands_stack);
+  
+  temps_counter++;
+  temp = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  temp->label = generate_label(temps_counter, L_TEMP);
+  temp->value = "0";
+  bools_counter++;
+  ltrue = generate_label(bools_counter, L_TRUE);
+  lfalse = generate_label(bools_counter, L_FALSE);
+  
+  switch (bool_operator->class) {
+    case EQ:
+      // a == b
+      //          LD #TEMP_0
+      //          -  #TEMP_1
+      //          JZ TRUE_0
+      //          LV =0
+      //          JP FALSE_0
+      // TRUE_0   LV =1
+      // FALSE_1  MM #TEMP_2
+      fprintf(fp, "          LD  %s\n", lexpr->label);
+      fprintf(fp, "          -   %s\n", rexpr->label);
+      fprintf(fp, "          JZ  %s\n", ltrue);
+      fprintf(fp, "          LV  =0\n");
+      fprintf(fp, "          JP  %s\n", lfalse);
+      fprintf(fp, "%-10sLV  =1\n", ltrue);
+      fprintf(fp, "%-10sMM  %s\n", lfalse, temp->label);
+      break;
+    case NE:
+      // a != b
+      //          LD #TEMP_0
+      //          -  #TEMP_1
+      //          JZ FALSE_0
+      //          LV =1
+      //          JP TRUE_0
+      // FALSE_0  LV =0
+      // TRUE_1   MM #TEMP_2
+      fprintf(fp, "          LD  %s\n", lexpr->label);
+      fprintf(fp, "          -   %s\n", rexpr->label);
+      fprintf(fp, "          JZ  %s\n", lfalse);
+      fprintf(fp, "          LV  =1\n");
+      fprintf(fp, "          JP  %s\n", ltrue);
+      fprintf(fp, "%-10sLV  =0\n", lfalse);
+      fprintf(fp, "%-10sMM  %s\n", ltrue, temp->label);
+      break;
+    case LT:
+      // b < a (switch operands)
+      aux = lexpr;
+      lexpr = rexpr;
+      rexpr = aux;
+    case GT:
+      // a > b
+      //          LD #TEMP_0
+      //          -  #TEMP_1
+      //          JN FALSE_0
+      //          JZ FALSE_0
+      //          LV =1
+      //          JP TRUE_0
+      // FALSE_0  LV =0
+      // TRUE_0   MM #TEMP_2
+      fprintf(fp, "          LD  %s\n", lexpr->label);
+      fprintf(fp, "          -   %s\n", rexpr->label);
+      fprintf(fp, "          JN  %s\n", lfalse);
+      fprintf(fp, "          JZ  %s\n", lfalse);
+      fprintf(fp, "          LV  =1\n");
+      fprintf(fp, "          JP  %s\n", ltrue);
+      fprintf(fp, "%-10sLV  =0\n", lfalse);
+      fprintf(fp, "%-10sMM  %s\n", ltrue, temp->label);
+      break;
+    case LE:
+      // b <= b (switch operands)
+      aux = lexpr;
+      lexpr = rexpr;
+      rexpr = aux;
+    case GE:
+      // a >= b
+      //          LD #TEMP_0
+      //          -  #TEMP_1
+      //          JN FALSE_0
+      //          LV =1
+      //          JP TRUE_0
+      // FALSE_0  LV =0
+      // TRUE_0   MM #TEMP_2
+      fprintf(fp, "          LD  %s\n", lexpr->label);
+      fprintf(fp, "          -   %s\n", rexpr->label);
+      fprintf(fp, "          JN  %s\n", lfalse);
+      fprintf(fp, "          LV  =1\n");
+      fprintf(fp, "          JP  %s\n", ltrue);
+      fprintf(fp, "%-10sLV  =0\n", lfalse);
+      fprintf(fp, "%-10sMM  %s\n", ltrue, temp->label);
+      break;
+    default:
+      fatal_error("Error: bool operation not implmented");
+  }
+  
+  /* register temp variable to be generated on data segment */
+  stack_push(temp, &variables_stack);
+  stack_push(temp, &operands_stack);
+  bool_operator = NULL; /* RESET */
 }
 
 /* CODE GENERATION */
