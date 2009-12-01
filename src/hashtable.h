@@ -29,6 +29,7 @@ void hashtable_delete(Hashtable *table);
 
 /* Insert a <key, value> pair into the hashtable */
 void hashtable_insert(Hashtable *table, KEY key, VALUE value);
+void hashtable_remove(Hashtable *table, KEY key);
 
 VALUE hashtable_get(Hashtable *table, KEY key);
 

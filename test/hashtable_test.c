@@ -96,6 +96,21 @@ void test_internal_key_should_be_inside_range_of_table_indexes(CuTest *tc) {
   hashtable_delete(table);
 }
 
+void test_remove_entry_hash_table(CuTest *tc) {
+  VALUE myvalue;
+  Hashtable *table = hashtable_new(10);
+  table->hashing_function = hashing_helper;
+
+  hashtable_insert(table, "any_key", "foo");
+  myvalue = hashtable_get(table, "any_key");
+  CuAssertPtrNotNull(tc, myvalue);
+  
+  hashtable_remove(table, "any_key");
+  CuAssertPtrNull(tc, hashtable_get(table, "any_key"));
+
+  hashtable_delete(table);
+}
+
 /* Helpers */
 int hashing_helper(char *value) {
   return 1;
