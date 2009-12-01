@@ -70,6 +70,27 @@ VALUE hashtable_get(Hashtable *table, KEY key) {
   return entry == NULL ? NULL : entry->value;
 }
 
+void hashtable_remove(Hashtable *table, KEY key) {
+  Entry *entry, *before;
+  int internal_key;
+  internal_key = table->hashing_function(key) % table->size;
+
+  before = entry = table->entries[internal_key];
+  if (entry == NULL) return ;
+  
+  while ( entry != NULL && strcmp(entry->key, key) ) {
+    before = entry;
+    entry = entry->next;
+  }
+  
+  /* if head of list */
+  if (before == entry)
+    table->entries[internal_key] = NULL;
+  else
+    before->next = entry->next;
+
+  entry = NULL;
+}
 
 static Entry* new_entry(KEY key, VALUE value) {
   Entry* entry = (Entry *) malloc(sizeof(Entry));
