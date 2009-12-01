@@ -78,7 +78,7 @@ namespace "test" do |namespace|
   desc "Run parser tests"
   task :parser => ["parser_test.o", "parser.o", "lexer.o", "string_buffer.o", "error.o", 
                    "bufstream.o", "xstring.o", "alloc.o", "hashtable.o", "CuTest.o",
-                   "stack.o", "semantic_actions.o"] do |t|
+                   "stack.o", "semantic_actions.o", "scope.o"] do |t|
     generated_test_file = make_tests('test/parser_test.c')
     sh "gcc #{ARGS} -c #{generated_test_file}"
     sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_parser_test.o -o bin/#{t.name}"
@@ -96,10 +96,19 @@ namespace "test" do |namespace|
   desc "Run semantic actions tests"
   task :semantic_actions => ["semantic_actions_test.o", "semantic_actions.o", "CuTest.o",
                              "hashtable.o", "stack.o", "lexer.o", "string_buffer.o", "error.o", 
-                             "bufstream.o", "xstring.o", "alloc.o"] do |t|
+                             "bufstream.o", "xstring.o", "alloc.o", "scope.o"] do |t|
       generated_test_file = make_tests('test/semantic_actions_test.c')
       sh "gcc #{ARGS} -c #{generated_test_file}"
       sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_semantic_actions_test.o -o bin/#{t.name}"
+      sh "./bin/#{t.name}"
+  end
+  
+  desc "Run scope tests"
+  task :scope => ["scope_test.o", "scope.o", "CuTest.o",
+                   "hashtable.o", "error.o"] do |t|
+      generated_test_file = make_tests('test/scope_test.c')
+      sh "gcc #{ARGS} -c #{generated_test_file}"
+      sh "gcc #{ARGS} #{t.prerequisites.join(' ')} cu_scope_test.o -o bin/#{t.name}"
       sh "./bin/#{t.name}"
   end
 
@@ -147,6 +156,7 @@ file "hashtable_test.o"       => ["test/hashtable_test.c", "src/hashtable.c"]
 file "parser_test.o"          => ["test/parser_test.c", "src/parser.c"]
 file "stack_test.o"           => ["test/stack_test.c", "src/stack.c"]
 file "semantic_actions.o"     => ["test/semantic_actions_test.c", "src/semantic_actions.c"]
+file "scope.o"                => ["test/scope_test.c", "src/scope.c"]
 
 
 

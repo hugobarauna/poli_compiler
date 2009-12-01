@@ -72,7 +72,7 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
     if (token == NULL)
       return current_state == 6 ? 1 : 0;
 
-    //printf("External Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
+    printf("External Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
 
     switch (current_state) {
     case 0:
@@ -88,8 +88,10 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
         declaration_semantic_action(token->value);
         current_state = 2;
       }
-      else if (token->class == OPERATION)
+      else if (token->class == OPERATION) {
+        declaration_semantic_action(token->value);
         current_state = 3;
+      }
       else
         return 0;
       break;
@@ -99,13 +101,15 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
         current_state = 5;
         break;
       case LPAR:
-        remove_stack_variable_semantic_action();
+        //remove_stack_variable_semantic_action();
         current_state = 4;
         break;
       case LBRA:
         current_state = 7;
         break;
       case SEMICOLON:
+        /* var declaration without value */
+        decl_variable_semantic_action();
         current_state = 6;
         break;
       default:
@@ -123,8 +127,10 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
         type_declared = token->class;
         current_state = 8;
       }
-      else if (token->class == RPAR)
+      else if (token->class == RPAR) {
+        end_declaration_semantic_action();
         current_state = 9;
+      }
       else
         return 0;
       break;
@@ -136,6 +142,7 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       else return 0;
       break;
     case 6:
+      end_declaration_semantic_action();
       return 1;
     case 7:
       if (token->class == NUMBER)
@@ -148,8 +155,10 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       else return 0;
       break;
     case 9:
-      if (token->class == DO)
+      if (token->class == DO) {
+        begin_scope_semantic_action();
         current_state = 11;
+      }
       else
         return 0;
       break;
@@ -167,6 +176,7 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       else return 0;
       break;
     case 12:
+      /* ENDED DECLARATION */
       if (token->class == SEMICOLON)
         current_state = 6;
       else if (token->class == ASSIGN)
@@ -175,6 +185,7 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       break;
     case 13:
       if (token->class == END) {
+        end_scope_semantic_action();
         current_state = 6;
       }
       else return 0;
@@ -192,8 +203,10 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
     case 16:        
       if (token->class == COMMA)
         current_state = 18;
-      else if (token->class == RPAR)
+      else if (token->class == RPAR) {
+        end_declaration_semantic_action();
         current_state = 9;
+      }
       else return 0;
       break;
     case 17:
@@ -211,8 +224,12 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       else return 0;
       break;
     case 19:
-      if (token->class == SEMICOLON)
+      if (token->class == SEMICOLON) {
+        end_expr_semantic_action();
+        /* var declaration with value */
+        decl_variable_semantic_action();
         current_state = 6;
+      }
       else return 0;
       break;
     }
@@ -247,8 +264,11 @@ int is_decl(BufferedInputStream *source_code_stream) {
     case 2:
       if (token->class == ASSIGN)
         current_state = 3;
-      else if (token->class == SEMICOLON)
+      else if (token->class == SEMICOLON) {
+        /* WITHOUT VALUE */
+        decl_variable_semantic_action();
         current_state = 4;
+      }
       else if (token->class == LBRA)
         current_state = 5;
       else return 0;
@@ -262,6 +282,7 @@ int is_decl(BufferedInputStream *source_code_stream) {
         return 0;
       break;
     case 4:
+      end_declaration_semantic_action();
       return 1;
     case 5:
       if (token->class == NUMBER)
@@ -269,8 +290,12 @@ int is_decl(BufferedInputStream *source_code_stream) {
       else return 0;
       break;
     case 6:
-      if (token->class == SEMICOLON)
+      if (token->class == SEMICOLON) {
+        /* WITH VALUE */
+        end_expr_semantic_action();
+        decl_variable_semantic_action();
         current_state = 4;
+      }
       else return 0;
       break;
     case 7:

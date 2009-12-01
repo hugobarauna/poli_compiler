@@ -1,5 +1,6 @@
 #include "semantic_actions.h"
 #include "lexer.h"
+#include "scope.h"
 
 class_t type_declared;
 int variables_counter = -1;
@@ -10,30 +11,39 @@ int endifs_counter = -1;
 int whiles_counter = -1;
 int bools_counter = -1;
 int temps_counter = -1;
+int funcs_counter = -1;
+int func_vars_counter = -1;
 Hashtable *sym_table;
 Stack operators_stack, operands_stack, constants_stack, variables_stack;
 Stack stmts_stack;
 Token *bool_operator = NULL;
 char *lvalue = NULL;
 
-static SymTableEntry* new_sym_table_entry(char* id_name, char* label, Descriptor* descriptor);
 static void clean_stacks();
 
 static FILE *fp = NULL;
 
+static VariableStackItem *stack_item_new(char *label, char *value) {
+  VariableStackItem *item;
+  item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
+  if (item == NULL)
+    fatal_error("Error: couldn't create a VariableStackItem");
+    
+  item->label = label;
+  item->value = value;
+  
+  return item;
+}
+
 void semantic_initialize() {
   VariableStackItem *ktrue, *kfalse;
+  scope_reset();
+  scope_new(); /* GLOBAL SCOPE */
   
-  sym_table = hashtable_new(SYM_TABLE_SIZE);
   clean_stacks();
-  /* LOAD FIXED CONSTANTS */
-  ktrue = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  ktrue->label = "TRUE";
-  ktrue->value = "1";
-  
-  kfalse = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  kfalse->label = "FALSE";
-  kfalse->value = "0";
+  /* LOAD FIXED CONSTANTS */  
+  ktrue = stack_item_new("TRUE", "1");
+  kfalse = stack_item_new("FALSE", "0");
   
   stack_push(ktrue, &constants_stack);
   stack_push(kfalse, &constants_stack);
@@ -44,22 +54,6 @@ void semantic_initialize() {
      somethin like this
            @ /0
   */
-}
-
-void sym_table_insert(char* id_name, char* label, Descriptor* descriptor) {
-  SymTableEntry* entry = new_sym_table_entry(id_name, label, descriptor);
-  hashtable_insert(sym_table, id_name, entry);
-}
-
-SymTableEntry* sym_table_get(char* id_name) {
-  return hashtable_get(sym_table, id_name);
-}
-
-int is_identifier_declared(char* id_name) {
-  if (sym_table_get(id_name) != NULL)
-    return 1;
-  else
-    return 0;
 }
 
 char* generate_label(int counter, label_t type) {
@@ -92,6 +86,12 @@ char* generate_label(int counter, label_t type) {
     case L_ENDWHILE:
       strcpy(label, "ENDWHILE_");
       break;
+    case L_FUNC_VAR:
+      strcpy(label, "FUNC_VAR_");
+      break;
+    case L_FUNC:
+      strcpy(label, "FUNC_");
+      break;
     case L_TRUE:
       strcpy(label, "TRUE_");
       break;
@@ -109,29 +109,17 @@ char* generate_label(int counter, label_t type) {
 void generate_code() {
   // GERA CODIGO
   VariableStackItem *lvalue, *rvalue, *operator, *temp;
+  char *label;
   
+  printf("generate_code()");
   operator = stack_pop(&operators_stack);
   rvalue = stack_pop(&operands_stack);
   lvalue = stack_pop(&operands_stack);
   
- /* fputs("\tLD\t", fp);
-  fputs(lvalue->label, fp);
-  fputs("\n\t", fp);
-  fputs(operator->label, fp);
-  fputs("\t", fp);
-  fputs(rvalue  ->label, fp);
-  fputs("\n", fp);
-*/
   temps_counter++;
-  temp = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  temp->label = generate_label(temps_counter, L_TEMP);
-  temp->value = "0";
-/*
-
-  fputs("\tMM\t", fp);
-  fputs(temp->label, fp);
-  fputs("\n", fp);
-*/
+  label = generate_label(temps_counter, L_TEMP);
+  temp = stack_item_new(label, "0");
+  
   fprintf(fp, "          LD  %s\n", lvalue->label);
   fprintf(fp, "          %-2s  %s\n", operator->label, rvalue->label);
   fprintf(fp, "          MM  %s\n", temp->label);
@@ -154,9 +142,7 @@ void mult_div_semantic_action(char *operator) {
       mult_div_semantic_action(operator);
   }
   else {
-    item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-    item->label = operator; /* *, / */
-    item->value = NULL;
+    item = stack_item_new(operator, NULL);
     printf("! %s pushed to stack\n", item->label);
     stack_push(item, &operators_stack);
   }
@@ -174,9 +160,7 @@ void add_sub_semantic_action(char *operator) {
     add_sub_semantic_action(operator);
   }
   else {
-    item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-    item->label = operator; /* +, - */
-    item->value = NULL;
+    item = stack_item_new(operator, NULL);
     printf("! %s pushed to stack\n", item->label);
     stack_push(item, &operators_stack);
   }
@@ -206,9 +190,20 @@ void end_expr_semantic_action() {
 }
 
 void declaration_semantic_action(char *identifier) {
+  if (lvalue != NULL)
+    fatal_error("Error: Cannot have more than one declaration");
+  lvalue = identifier;
+  printf("setted lvalue = %s\n", lvalue);
+}
+
+void decl_variable_semantic_action() {
+  printf("~decl_variable_semantic_action\n");
   VariableStackItem *item;
   VariableDescriptor *descriptor;
   char *label;
+  
+  if (is_identifier_declared(lvalue))
+    fatal_error("Error: Identifier already declared.");
   
   // increment variable counter
   variables_counter++;
@@ -216,15 +211,79 @@ void declaration_semantic_action(char *identifier) {
   label = generate_label(variables_counter, L_VARIABLE);
   descriptor = (VariableDescriptor *)malloc(sizeof(VariableDescriptor));
   descriptor->type = type_declared;
+  descriptor->name = lvalue; /* GET NAME */
   descriptor->default_value = "0";
   
-  sym_table_insert(identifier, label, descriptor);
+  if (!stack_empty(&operands_stack)) {
+    VariableStackItem *result = stack_pop(&operands_stack);
+  
+    fprintf(fp, "    LD %s\n", result->label);
+    fprintf(fp, "    MM %s\n", label);
+  }
+  
+  printf("!!!! insert into table\n");
+  scope_sym_table_insert(lvalue, label, descriptor);
+  item = stack_item_new(label, descriptor->default_value);
+  
+  /* register variable name */
+  stack_push(item, &variables_stack);
+}
+
+void routine_param_semantic_action() {
+/*  RoutineDescriptor *routine;
+  VariableStackItem *item;
+  VariableDescriptor *variable;
+  char *label;
+  
+  // increment variable counter
+  func_vars_counter++;
+  // insert into symbol table and save its type (descriptor)
+  label = generate_label(func_vars_counter, L_FUNC_VAR);
+  variable = (VariableDescriptor *)malloc(sizeof(VariableDescriptor));
+  variable->type = type_declared;
+  variable->name = label;
+  variable->default_value = "0";
+  
+  //scope_sym_table_insert(identifier, label, descriptor);
+  
+  item = stack_item_new(label, descriptor->default_value);
+  stack_push(item, &variables_stack);  
+  
+  //routine = sym_table_get(value);
+  //routine->params[routine->num_params]
+  */
+}
+
+void routine_definition_semantic_action() {
+/*  VariableStackItem *item;
+  RoutineDescriptor *descriptor;
+
+  // insert into symbol table and save its type (descriptor)
+  descriptor = (RoutineDescriptor *)malloc(sizeof(RoutineDescriptor));
+  descriptor->type = type_declared;
+  descriptor->name = lvalue;
+  descriptor->num_params = 0;
+  
+ scope_sym_table_insert(identifier, lvalue, descriptor);
   
   item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  item->label = label;
-  item->value = descriptor->default_value;
-  
-  stack_push(item, &variables_stack);
+  item->label = lvalue;
+  item->value = "FUNC";
+*/
+}
+
+void begin_scope_semantic_action() {
+  scope_new();
+}
+
+void end_scope_semantic_action() {
+  scope_remove();
+}
+
+void end_declaration_semantic_action() {
+  printf("end declaration semantic action for %s\n", lvalue);
+  /* RESET */
+  lvalue = NULL;
 }
 
 void remove_stack_variable_semantic_action() {
@@ -263,10 +322,8 @@ void identifier_semantic_action(char *identifier) {
   SymTableEntry *entry;
   
   // push the identifier into the operands stack
-  if (!is_identifier_declared(identifier))
-    fatal_error("Identifier not declared.");
   
-  entry = sym_table_get(identifier);
+  entry = scope_sym_table_get(identifier);
   item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
   item->label = entry->label; /* LABEL ASSOCIATED TO VARIABLE */
   item->value = NULL;
@@ -518,14 +575,6 @@ void generate_data_definition_code() {
     fprintf(fp, "%-10sK   =%s\n", item->label, item->value);
   }
   fclose(fp);
-}
-
-static SymTableEntry* new_sym_table_entry(char* id_name, char* label, Descriptor* descriptor) {
-  SymTableEntry* entry = (SymTableEntry*) malloc(sizeof(SymTableEntry));
-  entry->id_name = id_name;
-  entry->label = label;
-  entry->descriptor = descriptor;
-  return entry;                                           
 }
 
 static void clean_stacks() {

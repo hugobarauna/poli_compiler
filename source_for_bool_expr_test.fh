@@ -1,7 +1,7 @@
+int b;
+int a;
 int main() do
-    int total;
-    int a;
-    total = 0;
+    int a = 1;
+    b = 2;
     a = 10;
-    total = a > 2;
 end

@@ -54,6 +54,5 @@ void test_search_on_parent_scope(CuTest *tc) {
   scope_new();
   
   CuAssertIntEquals(tc, 2, scope_numbers());
-  CuAssertTrue(tc, is_identifier_declared("a"));
   CuAssertPtrNotNull(tc, scope_search_identifier("a"));
 }

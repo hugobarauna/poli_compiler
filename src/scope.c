@@ -34,6 +34,7 @@ void scope_new() {
     scope->next = current_scope;
     current_scope = scope;
   }
+  printf("! NEW scope declared\n");
   _scope_numbers++;
 }
 
@@ -51,7 +52,7 @@ void scope_sym_table_insert(char* id_name, char* label, Descriptor* descriptor) 
 }
 
 SymTableEntry* scope_sym_table_get(char* id_name) {
-  return hashtable_get(current_scope->table, id_name);
+  return scope_search_identifier(id_name);
 }
 
 /*
@@ -80,5 +81,5 @@ SymTableEntry *scope_search_identifier(char *id_name) {
 }
 
 int is_identifier_declared(char* id_name) {
-  return scope_search_identifier(id_name) != NULL;
+  return hashtable_get(current_scope->table, id_name) != NULL;
 }
