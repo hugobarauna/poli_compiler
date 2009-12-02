@@ -1,0 +1,10 @@
+int a = 2;
+int soma(int a, int b) do
+  return a + b;
+end
+
+int main() do
+  int result = 0;
+  result = soma(1, 2);
+  return result;
+end

@@ -7,6 +7,7 @@ typedef void ItemType;
 typedef struct {
     int top;                      /* topo = -1, se a pilha está vazia */ 
     ItemType *items[MAX];
+    const char *name;
 } Stack;
 
 void stack_clean(Stack *s);

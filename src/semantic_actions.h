@@ -65,21 +65,19 @@ void end_expr_semantic_action();
 void bool_operator_semantic_action(Token *token);
 void bool_expr_semantic_action();
 
+void pop_fname_semantic_action();
 void routine_semantic_action();
-void routine_param_semantic_action(char *identifier);
-void begin_scope_semantic_action();
-void end_scope_semantic_action();
-
 void routine_definition_semantic_action();
 void create_routine_semantic_action();
 void end_routine_semantic_action();
-void register_return_routine_semantic_action();
-void return_routine_semantic_action(int has_param);
-
-void pop_fname_semantic_action();
-void push_arg_routine_semantic_action();
+void return_routine_semantic_action();
 void prepare_call_routine_semantic_action();
 void call_routine_semantic_action();
+void push_arg_routine_semantic_action();
+void register_return_routine_semantic_action();
+void routine_param_semantic_action(char *identifier);
+void begin_scope_semantic_action();
+void end_scope_semantic_action();
 
 /* CODE GENERATION */
 

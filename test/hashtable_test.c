@@ -5,8 +5,8 @@
 #include "../src/hashtable.h"
 
 /* Helpers */
-int hashing_helper(char *value);
-static int hashfn_bigger_than_table(char *value) {
+unsigned int hashing_helper(char *value);
+static unsigned int hashfn_bigger_than_table(char *value) {
   return 12345;
 }
 
@@ -112,6 +112,6 @@ void test_remove_entry_hash_table(CuTest *tc) {
 }
 
 /* Helpers */
-int hashing_helper(char *value) {
+unsigned int hashing_helper(char *value) {
   return 1;
 }

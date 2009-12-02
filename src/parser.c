@@ -749,16 +749,16 @@ int is_factor(BufferedInputStream *stream) {
     case 8:
       if (token->class == COMMA) {
         end_expr_semantic_action();
-        bool_expr_semantic_action();
-        generate_assignment_code();
+        //bool_expr_semantic_action();
+        //generate_assignment_code();
         push_arg_routine_semantic_action();
         current_state = 9;
       }
       else if (token->class == RPAR) {
         /* END FUNCTION PARAMS */
         end_expr_semantic_action();
-        bool_expr_semantic_action();
-        generate_assignment_code();
+        //bool_expr_semantic_action();
+        //generate_assignment_code();
         push_arg_routine_semantic_action();
         call_routine_semantic_action();
         current_state = 1;

@@ -1,18 +1,24 @@
-# This is a simple program, just to show some features of our language
+int a = 2;
+int soma(int a, int b) do
+  return a + b;
+end
 
-int a = 0;
-int b;
+int square(int a) do
+  int square = 0;
+  int i = a;
+  while (i > 0) do
+    int j = a;
+    while (j > 0) do
+      square = square +1;
+      j = j -1;
+    end
+    i = i - 1;
+  end
+  return square;
+end
 
 int main() do
-  int i = 1;
-  while (i <= 3) do
-    a = a + i;
-    i = i + 1;
-  end
-
-  if (a > 5) do
-    b = 7;
-  else
-    b = 13;
-  end
+  int result = soma(1, 2);
+  int sqr = square(3);
+  return result;
 end
