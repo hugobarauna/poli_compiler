@@ -13,27 +13,33 @@ int bools_counter = -1;
 int temps_counter = -1;
 int funcs_counter = -1;
 int func_vars_counter = -1;
+int returns_counter = -1;
 int is_return = 0;
 Hashtable *sym_table;
 Stack operators_stack, operands_stack, constants_stack, variables_stack;
+Stack routine_args_stack;
+int call_routine_arg_pos = 0;
 Stack stmts_stack;
 Token *bool_operator = NULL;
 char *lvalue = NULL;
+char *fname = NULL;
 RoutineDescriptor *func = NULL;
+RoutineDescriptor *call_func = NULL;
 
 static void clean_stacks();
 
 static FILE *fp = NULL;
 
-static VariableStackItem *stack_item_new(char *label, char *value) {
+static VariableStackItem *stack_item_new(char *label, char *value, char *comment) {
   VariableStackItem *item;
   item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
   if (item == NULL)
     fatal_error("Error: couldn't create a VariableStackItem");
-    
+  
   item->label = label;
   item->value = value;
-  
+  item->comment = comment;
+
   return item;
 }
 
@@ -44,8 +50,8 @@ void semantic_initialize() {
   
   clean_stacks();
   /* LOAD FIXED CONSTANTS */  
-  ktrue = stack_item_new("TRUE", "1");
-  kfalse = stack_item_new("FALSE", "0");
+  ktrue = stack_item_new("TRUE", "1", "true bool");
+  kfalse = stack_item_new("FALSE", "0", "false bool");
   
   stack_push(ktrue, &constants_stack);
   stack_push(kfalse, &constants_stack);
@@ -96,6 +102,12 @@ char* generate_label(int counter, label_t type) {
     case L_FUNC:
       strcpy(label, "FUNC_");
       break;
+    case L_FUNC_RESULT:
+      strcpy(label, "FUNC_RESULT_");
+      break;
+    case L_FUNC_END:
+      strcpy(label, "FUNC_END_");
+      break;
     case L_TRUE:
       strcpy(label, "TRUE_");
       break;
@@ -114,15 +126,14 @@ void generate_code() {
   // GERA CODIGO
   VariableStackItem *lvalue, *rvalue, *operator, *temp;
   char *label;
-  
-  printf("generate_code()");
+
   operator = stack_pop(&operators_stack);
   rvalue = stack_pop(&operands_stack);
   lvalue = stack_pop(&operands_stack);
   
   temps_counter++;
   label = generate_label(temps_counter, L_TEMP);
-  temp = stack_item_new(label, "0");
+  temp = stack_item_new(label, "0", "");
   
   fprintf(fp, "          LD  %s\n", lvalue->label);
   fprintf(fp, "          %-2s  %s\n", operator->label, rvalue->label);
@@ -138,7 +149,6 @@ void generate_code() {
 
 void mult_div_semantic_action(char *operator) {
   VariableStackItem *item = stack_lookup(&operators_stack);
-  if (item == NULL) printf("\t\t\tTrace: mult-div no operator\n");
   if (item != NULL
       && (strcmp(item->label, "*") == 0 
       || strcmp(item->label, "/") == 0)) {
@@ -146,7 +156,7 @@ void mult_div_semantic_action(char *operator) {
       mult_div_semantic_action(operator);
   }
   else {
-    item = stack_item_new(operator, NULL);
+    item = stack_item_new(operator, NULL, "");
     printf("! %s pushed to stack\n", item->label);
     stack_push(item, &operators_stack);
   }
@@ -154,7 +164,6 @@ void mult_div_semantic_action(char *operator) {
 
 void add_sub_semantic_action(char *operator) {
   VariableStackItem *item = stack_lookup(&operators_stack);
-  if (item == NULL) printf("\t\t\tTrace: add-sub no operator\n");
   if (item != NULL
       && (strcmp(item->label, "*") == 0 
       || strcmp(item->label, "/") == 0
@@ -164,7 +173,7 @@ void add_sub_semantic_action(char *operator) {
     add_sub_semantic_action(operator);
   }
   else {
-    item = stack_item_new(operator, NULL);
+    item = stack_item_new(operator, NULL, "");
     printf("! %s pushed to stack\n", item->label);
     stack_push(item, &operators_stack);
   }
@@ -184,10 +193,9 @@ void rpar_semantic_action() {
 
 void end_expr_semantic_action() {
   VariableStackItem *item = stack_lookup(&operators_stack);
+  if (item == NULL) return;
   
-  if (item == NULL) printf("\t\t\tendexpr: there is no operators\n");
   while (item != NULL && strcmp(item->label, "(") != 0) {
-    printf("\t\t\tRESOLVING: %s\n", item->label);
     generate_code();
     item = stack_lookup(&operators_stack);
   }
@@ -197,11 +205,9 @@ void declaration_semantic_action(char *identifier) {
   if (lvalue != NULL)
     fatal_error("Error: Cannot have more than one declaration");
   lvalue = identifier;
-  printf("setted lvalue = %s\n", lvalue);
 }
 
 void decl_variable_semantic_action() {
-  printf("~decl_variable_semantic_action\n");
   VariableStackItem *item;
   VariableDescriptor *descriptor;
   char *label;
@@ -224,10 +230,9 @@ void decl_variable_semantic_action() {
     fprintf(fp, "    LD %s\n", result->label);
     fprintf(fp, "    MM %s\n", label);
   }
-  
-  printf("!!!! insert into table\n");
+
   scope_sym_table_insert(lvalue, label, descriptor);
-  item = stack_item_new(label, descriptor->default_value);
+  item = stack_item_new(label, descriptor->default_value, lvalue);
   
   /* register variable name */
   stack_push(item, &variables_stack);
@@ -238,19 +243,20 @@ void routine_definition_semantic_action() {
   if (func != NULL)
     fatal_error("Error: Cannot have a function inside a function\n");
 
-  printf("~ routine definition semantic action\n");
   VariableStackItem *item;
   RoutineDescriptor *descriptor;
 
   if (is_identifier_locally_declared(lvalue))
     fatal_error("Error: conflict name.");
 
-  printf("LVALUE? %s\n", lvalue);
   // insert into symbol table and save its type (descriptor)
+  returns_counter++;
   descriptor = (RoutineDescriptor *)malloc(sizeof(RoutineDescriptor));
   descriptor->return_type = type_declared;
   descriptor->name = lvalue;
   descriptor->num_params = 0;
+  descriptor->result = generate_label(returns_counter, L_FUNC_RESULT);
+  descriptor->end = generate_label(returns_counter, L_FUNC_END);
   func = descriptor;
   
   scope_sym_table_insert(lvalue, lvalue, descriptor);
@@ -266,8 +272,6 @@ void routine_param_semantic_action(char *identifier) {
   entry = scope_sym_table_get(lvalue);
   routine = (VariableDescriptor*)entry->descriptor;
   //routine->params[routine->num_params++] = variable;
-  
-  printf("~ routine_param_semantic_action\n");
 
   if (is_identifier_locally_declared(identifier))
     fatal_error("Error: Variable name conflict in function declaration");
@@ -283,18 +287,15 @@ void routine_param_semantic_action(char *identifier) {
   
   scope_sym_table_insert(identifier, label, variable);
   
-  item = stack_item_new(label, variable->default_value);
-  stack_push(item, &variables_stack);  
-  
   func->params[func->num_params] = variable;
   func->num_params++;
 }
 
 void create_routine_semantic_action() {
-  printf ("CALLLLLLLED\n");
   int i;
   for (i = 0; i < func->num_params; ++i)
     fprintf(fp, "%s  K  =0\n", func->params[i]->name);
+  fprintf(fp, "%s  K  /0\n", func->result);
   fprintf(fp, "%s  K  /0\n", func->name);
 }
 
@@ -303,22 +304,26 @@ void register_return_routine_semantic_action() {
 }
 
 void return_routine_semantic_action(int has_param) {
-  if (is_return && has_param && func->return_type == VOID)
+  printf("return_routine_semantic_action\n");
+  if (!is_return) return;
+  if (has_param && func->return_type == VOID)
     fatal_error("Error: Return expression does not return a value");
 
-  if (!has_param)
+  if (func->return_type == VOID)
     fprintf(fp, "         RS %s\n", func->name);
   else {
     // LOAD VARIABLE
-    VariableStackItem *item = stack_pop(&operands_stack);
-    fprintf(fp, "         LD %s\n", item->label);
-    fprintf(fp, "         RS %s\n", func->name);
+    if (stack_empty(&operands_stack)) printf("EMPTY!\n");
+//    VariableStackItem *item = stack_pop(&operands_stack);
+//    printf("%s, %s\n", item->label, item->value);
+    fprintf(fp, "         MM %s\n", func->result);
+    fprintf(fp, "         JP %s\n", func->end);
   }
   is_return = 0;
 }
 
 void end_routine_semantic_action() {
-  fprintf(fp, "          RS  %s\n", func->name);
+  fprintf(fp, "%s RS  %s\n", func->end, func->name);
   func = NULL;
 }
 
@@ -331,7 +336,6 @@ void end_scope_semantic_action() {
 }
 
 void end_declaration_semantic_action() {
-  printf("end declaration semantic action for %s\n", lvalue);
   /* RESET */
   lvalue = NULL;
 }
@@ -343,14 +347,13 @@ void remove_stack_variable_semantic_action() {
 
 void number_semantic_action(char *number) {
   VariableStackItem *item;
+  char *k;
   
   // increment the constants counter
   constants_counter++;
   // save the number value and associate it with the constant identifier label
-
-  item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  item->label = generate_label(constants_counter, L_CONSTANT);
-  item->value = number;
+  k = generate_label(constants_counter, L_CONSTANT);
+  item = stack_item_new(k, number, k);
 
   /* something like 
      C0 /2
@@ -364,23 +367,57 @@ void number_semantic_action(char *number) {
 void pop_lvalue_semantic_action() {
   VariableStackItem *item = stack_pop(&operands_stack);
   lvalue = item->label;
-  printf("\t\t\tTrace: LVALUE setted to %s\n", lvalue);
+  //printf("\t\t\tTrace: LVALUE setted to %s\n", lvalue);
+}
+
+void pop_fname_semantic_action() {
+  VariableStackItem *item = stack_pop(&operands_stack);
+  fname = item->label;
+  //printf("\t\t\tTrace: FNAME setted to %s\n", fname);
+}
+
+void push_arg_routine_semantic_action() {
+  VariableStackItem *item;
+  if (call_routine_arg_pos > call_func->num_params)
+    fatal_error("Error: Exceeded the number of args");
+  item = stack_pop(&operands_stack);
+  fprintf(fp, "           LD %s\n", item->label);
+  fprintf(fp, "           MM %s\n", call_func->params[call_routine_arg_pos]->name);
+  call_routine_arg_pos++;
+}
+
+void prepare_call_routine_semantic_action() {
+  SymTableEntry *entry = scope_sym_table_get(fname);
+  call_func = (RoutineDescriptor *)entry->descriptor;
+  printf("LOADED FUNCTION %s\n", call_func->name);
+}
+
+void call_routine_semantic_action() {
+  VariableStackItem *item;
+  
+  if (call_routine_arg_pos+1 < call_func->num_params)
+    fatal_error("Error: Missing function arguments");
+  fprintf(fp, "        SC  %s\n", call_func->name);
+
+  item = stack_item_new(call_func->result, NULL, call_func->name);
+  stack_push(item, &operands_stack);
+  
+  /* RESET */
+  call_routine_arg_pos = 0;
+  call_func = NULL;
+  fname = NULL;
 }
 
 void identifier_semantic_action(char *identifier) {
   VariableStackItem *item;
   SymTableEntry *entry;
   
-  printf("~ identifier_semantic_action\n");
-  
   // push the identifier into the operands stack
   if (!is_identifier_declared(identifier))
     fatal_error("Error: Variable not declared");
   
   entry = scope_sym_table_get(identifier);
-  item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  item->label = entry->label; /* LABEL ASSOCIATED TO VARIABLE */
-  item->value = NULL;
+  item = stack_item_new(entry->label, NULL, identifier);
 
   printf("! %s:%s pushed to stack\n", identifier, item->label);
   stack_push(item, &operands_stack);
@@ -392,6 +429,7 @@ void lpar_semantic_action(char *symbol) {
   item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
   item->label = "("; /* ( */
   item->value = NULL;
+  item->comment = "(";
   
   stack_push(item, &operators_stack);
 }
@@ -474,12 +512,12 @@ void bool_operator_semantic_action(Token *token) {
     fatal_error("Error: cannot have more than one boolean expression");
   }
   bool_operator = token;
-  printf("SETTED: %s\n", bool_operator->value);
+  //printf("SETTED: %s\n", bool_operator->value);
 }
 
 void bool_expr_semantic_action() {
   VariableStackItem *lexpr, *rexpr, *temp = NULL, *aux = NULL;
-  char *ltrue, *lfalse;
+  char *ltrue, *lfalse, *label;
   if (bool_operator == NULL) return; /* NOT AN BOOL EXPR */
   
   // lexpr < rexpr
@@ -487,9 +525,8 @@ void bool_expr_semantic_action() {
   lexpr = stack_pop(&operands_stack);
   
   temps_counter++;
-  temp = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  temp->label = generate_label(temps_counter, L_TEMP);
-  temp->value = "0";
+  label = generate_label(temps_counter, L_TEMP);
+  temp = stack_item_new(label, "0", label);
   bools_counter++;
   ltrue = generate_label(bools_counter, L_TRUE);
   lfalse = generate_label(bools_counter, L_FALSE);
@@ -604,9 +641,7 @@ void generate_assignment_code() {
   fprintf(fp, "          LD  %s\n", item->label);
   fprintf(fp, "          MM  %s\n", lvalue);
   
-  item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  item->label = lvalue;
-  item->value = NULL;
+  item = stack_item_new(lvalue, NULL, lvalue);
   
   stack_push(item, &operands_stack);
   /* PRE-CONDITION, while assign not found lvalue is NULL */
@@ -621,12 +656,12 @@ void generate_data_definition_code() {
   fprintf(fp, "          @   /200\n");
   while (!stack_empty(&variables_stack)) {
     VariableStackItem *item = (VariableStackItem *)stack_pop(&variables_stack);
-    fprintf(fp, "%-15sK   =%s\n", item->label, item->value);
+    fprintf(fp, "%-15sK   =%s ; %s\n", item->label, item->value, item->comment);
   }
   
   while (!stack_empty(&constants_stack)) {
     VariableStackItem *item = (VariableStackItem *)stack_pop(&constants_stack);
-    fprintf(fp, "%-10sK   =%s\n", item->label, item->value);
+    fprintf(fp, "%-10sK   =%s ;\n", item->label, item->value);
   }
   fclose(fp);
 }
@@ -637,4 +672,5 @@ static void clean_stacks() {
   stack_clean(&constants_stack);
   stack_clean(&variables_stack);
   stack_clean(&stmts_stack);
+  stack_clean(&routine_args_stack);
 }
