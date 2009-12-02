@@ -125,16 +125,6 @@ namespace "test" do |namespace|
   end
 end
 
-# desc "Run lexer test"
-# task :lexer_test => "test/lexer_test.o" do |t|
-#   generated_test_file = make_tests('test/lexer_test.c')
-#   deps = prepare_dependencies([generated_test_file, "src/string_buffer.c", "src/scanner.c"])
-#   generated_test = generated_test_file.split('.')[0]
-#   sh "gcc #{ARGS} #{deps} src/lexer.c test/lexer_test.c -o bin/#{generated_test} && ./bin/#{generated_test}"
-# end
-
-
-
 #####################
 #   Compilations   ##
 #####################
