@@ -13,6 +13,7 @@
 typedef struct _variable_stack_item {
   char *label;
   char *value;
+  char *comment;
 } VariableStackItem;
 
 typedef enum e_label_type {
@@ -25,6 +26,8 @@ typedef enum e_label_type {
   L_WHILE,
   L_ENDWHILE,
   L_FUNC_VAR,
+  L_FUNC_RESULT,
+  L_FUNC_END,
   L_FUNC,
   L_TRUE,
   L_FALSE

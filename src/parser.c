@@ -72,7 +72,7 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
     if (token == NULL)
       return current_state == 6 ? 1 : 0;
 
-    printf("External Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
+    //printf("External Declaration, state: <%d>, token: <%s>\n", current_state, token->value); 
 
     switch (current_state) {
     case 0:
@@ -384,7 +384,7 @@ int is_stmt(BufferedInputStream *stream) {
     if (token == NULL)
       return 0;
     
-    printf("Statement, state: <%d>, token: <%s>\n", current_state, token->value); 
+    //printf("Statement, state: <%d>, token: <%s>\n", current_state, token->value); 
     
     switch (current_state) {
     case 0:
@@ -520,7 +520,6 @@ int is_stmt(BufferedInputStream *stream) {
     case 16:
       if (is_expr(stream)) {
         /* WHILE STMT EXPR */
-        printf("HERE!!!!\n");
         end_expr_semantic_action();
         /* RESOLVE IF BOOL EXPR */
         bool_expr_semantic_action();
@@ -685,6 +684,7 @@ int is_factor(BufferedInputStream *stream) {
         current_state = 2;
         break;
       case OPERATION:
+        identifier_semantic_action(token->value);
         current_state = 3;
         break;
       case LPAR:
@@ -702,7 +702,8 @@ int is_factor(BufferedInputStream *stream) {
         current_state = 6;
       else if (token->class == LPAR) {
         /* FUNCTION CALL */
-          
+        pop_fname_semantic_action();
+        prepare_call_routine_semantic_action();
         current_state = 7;
       }
       else return 1; /* ACCEPT: FINAL STATE */
@@ -735,8 +736,10 @@ int is_factor(BufferedInputStream *stream) {
       else return 0; /* ERROR: NOT FINAL STATE */
       break;
     case 7:
-      if (token->class == RPAR)
+      if (token->class == RPAR) {
+        call_routine_semantic_action();
         current_state = 1;
+      }
       else if (is_expr(stream)) {
         current_state = 8;
         continue;
@@ -744,11 +747,22 @@ int is_factor(BufferedInputStream *stream) {
       else return 0;
       break;
     case 8:
-      if (token->class == COMMA)
+      if (token->class == COMMA) {
+        end_expr_semantic_action();
+        bool_expr_semantic_action();
+        generate_assignment_code();
+        push_arg_routine_semantic_action();
         current_state = 9;
-      else if (token->class == RPAR)
+      }
+      else if (token->class == RPAR) {
         /* END FUNCTION PARAMS */
+        end_expr_semantic_action();
+        bool_expr_semantic_action();
+        generate_assignment_code();
+        push_arg_routine_semantic_action();
+        call_routine_semantic_action();
         current_state = 1;
+      }
       else return 0; /* ERROR: NOT FINAL STATE */
       break;
     case 9:

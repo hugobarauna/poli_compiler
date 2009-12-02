@@ -20,6 +20,8 @@ typedef struct _variable_descriptor {
 typedef struct _routine_descriptor {
   class_t return_type;
   char *name;
+  char *result;
+  char *end;
   int num_params;
   VariableDescriptor *params[10];
 } RoutineDescriptor;

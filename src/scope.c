@@ -35,7 +35,6 @@ void scope_new() {
     scope->next = current_scope;
     current_scope = scope;
   }
-  printf("! NEW scope declared\n");
   _scope_numbers++;
 }
 
@@ -49,7 +48,6 @@ void scope_remove() {
 
 void scope_sym_table_insert(char *id_name, char *label, Descriptor *descriptor) {
   SymTableEntry* entry = new_sym_table_entry(id_name, label, descriptor);
-  printf("[[[[[[ %s, %s\n", id_name, label);
   hashtable_insert(current_scope->table, id_name, entry);
 }
 
@@ -66,9 +64,7 @@ void scope_sym_table_remove(char *id_name) {
 SymTableEntry *scope_search_identifier(char *id_name) {
   SymTableEntry *entry = NULL;
   Scope *scope = current_scope;
-  
-  printf("CURRENT SCOPE: %d\n", scope_numbers());
-  printf("id_name: %s\n", id_name);
+
   /* first search on current scope */
   entry = hashtable_get(scope->table, id_name);
   
@@ -81,7 +77,6 @@ SymTableEntry *scope_search_identifier(char *id_name) {
     entry = hashtable_get(scope->table, id_name);
     scope = scope->next;
   }
-  printf("?entry: %s, %s\n", entry->label, entry->id_name);
   return entry;
 }
 
