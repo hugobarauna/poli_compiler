@@ -130,6 +130,13 @@ end
 #####################
 
 #file "hashtable.o" => ["src/hashtable.c"]
+desc "Generate the final compiler binary "
+task :generate_binary => ["compiler.o", "parser_test.o", "parser.o", "lexer.o", 
+                          "string_buffer.o", "error.o", "bufstream.o", "xstring.o", 
+                          "alloc.o", "hashtable.o", "CuTest.o", "stack.o", 
+                          "semantic_actions.o"] do |t|
+  sh "gcc #{ARGS} #{t.prerequisites.join(' ')} -o compiler"
+end
 
 ########################################
 #   Tests tasks  dependencies         ##
@@ -147,7 +154,7 @@ file "parser_test.o"          => ["test/parser_test.c", "src/parser.c"]
 file "stack_test.o"           => ["test/stack_test.c", "src/stack.c"]
 file "semantic_actions.o"     => ["test/semantic_actions_test.c", "src/semantic_actions.c"]
 file "scope.o"                => ["test/scope_test.c", "src/scope.c"]
-
+file "compiler.o"             => ["src/compiler.c"]
 
 
 ##############
