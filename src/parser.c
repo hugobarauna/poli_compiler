@@ -399,8 +399,10 @@ int is_stmt(BufferedInputStream *stream) {
         register_return_routine_semantic_action();
         current_state = 4;
       }
-      else if (token->class == SCAN || token->class == PRINT)
+      else if (token->class == SCAN || token->class == PRINT) {
+        register_io_semantic_action(token->class);
         current_state = 5;
+      }
       else if (is_expr(stream)) {
         current_state = 2;
         continue;
@@ -475,6 +477,7 @@ int is_stmt(BufferedInputStream *stream) {
       break;
     case 9:
       if (token->class == RPAR) {
+        io_semantic_action();
         current_state = 2;
       }
       else return 0;

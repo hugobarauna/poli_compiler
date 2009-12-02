@@ -1,0 +1,4 @@
+void main() do
+  int i = 83;
+  print(i);
+end

@@ -7,7 +7,7 @@ int fatorial(int n) do
   return fat;
 end
 
-int main() do
-  int fator = fatorial(7);
-  return fator;
+void main() do
+  int fator = fatorial(3);
+  print(fator);
 end

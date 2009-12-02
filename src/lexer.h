@@ -76,7 +76,8 @@ typedef enum e_tag {
   SEMICOLON,
   DOT,
   TO,
-  REFER
+  REFER,
+  UNKNOWN
 } class_t;
 
 typedef enum e_token_t {

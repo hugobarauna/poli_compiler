@@ -79,6 +79,9 @@ void routine_param_semantic_action(char *identifier);
 void begin_scope_semantic_action();
 void end_scope_semantic_action();
 
+void register_io_semantic_action(class_t io_type);
+void io_semantic_action();
+
 /* CODE GENERATION */
 
 void generate_code();

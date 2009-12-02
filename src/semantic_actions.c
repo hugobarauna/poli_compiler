@@ -23,6 +23,7 @@ Stack stmts_stack;
 Token *bool_operator = NULL;
 char *lvalue = NULL;
 char *fname = NULL;
+class_t io_stmt;
 RoutineDescriptor *func = NULL;
 RoutineDescriptor *call_func = NULL;
 
@@ -58,8 +59,17 @@ void semantic_initialize() {
   
   fp = fopen("out.asm", "w");
   fprintf(fp, "        @  /0\n");
-  fprintf(fp, "        SC main\n");
-  fprintf(fp, "        HM /0\n");
+  fprintf(fp, "          SC main\n");
+  fprintf(fp, "          HM /0\n");
+  fprintf(fp, "OFFSET    K  /30\n");
+  fprintf(fp, "PRINT_IN  K  /0\n");
+  fprintf(fp, "PRINT     K  =0\n");
+  fprintf(fp, "          LD PRINT_IN\n");
+  fprintf(fp, "          +  OFFSET\n");
+  fprintf(fp, "          PD /100\n");
+  fprintf(fp, "          LV /0a\n");
+  fprintf(fp, "          PD /100\n");
+  fprintf(fp, "          RS PRINT\n");
   /* Maybe here, I already can open the output .asm file and write the first headers,
      somethin like this
            @ /0
@@ -532,6 +542,26 @@ void bool_operator_semantic_action(Token *token) {
   }
   bool_operator = token;
   //printf("SETTED: %s\n", bool_operator->value);
+}
+
+void register_io_semantic_action(class_t io_type) {
+  io_stmt = io_type;
+}
+
+void io_semantic_action() {
+  VariableStackItem *result = stack_pop(&operands_stack);
+  switch (io_stmt) {
+    case PRINT:
+      fprintf(fp, "       LD %s\n", result->label);
+      fprintf(fp, "       MM PRINT_IN\n");
+      fprintf(fp, "       SC PRINT\n");
+      break;
+    case SCAN:
+      break;
+    default:
+      break;
+  }
+  io_stmt = UNKNOWN;
 }
 
 void bool_expr_semantic_action() {
