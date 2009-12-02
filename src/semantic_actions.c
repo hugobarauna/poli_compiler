@@ -240,11 +240,9 @@ void decl_variable_semantic_action() {
 
 
 void routine_definition_semantic_action() {
+  RoutineDescriptor *descriptor;
   if (func != NULL)
     fatal_error("Error: Cannot have a function inside a function\n");
-
-  VariableStackItem *item;
-  RoutineDescriptor *descriptor;
 
   if (is_identifier_locally_declared(lvalue))
     fatal_error("Error: conflict name.");
@@ -264,13 +262,12 @@ void routine_definition_semantic_action() {
 
 void routine_param_semantic_action(char *identifier) {
   SymTableEntry *entry;
-  RoutineDescriptor *routine;
-  VariableStackItem *item;
+  //RoutineDescriptor *routine;
   VariableDescriptor *variable;
   char *label;
   
   entry = scope_sym_table_get(lvalue);
-  routine = (VariableDescriptor*)entry->descriptor;
+  //routine = (VariableDescriptor*)entry->descriptor;
   //routine->params[routine->num_params++] = variable;
 
   if (is_identifier_locally_declared(identifier))
