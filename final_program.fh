@@ -1,0 +1,8 @@
+# This is a simple program, just to show some features of our language
+
+int a;
+int b;
+int c;
+a = 2;
+b = 3;
+c = ((a+b)*3/5+3)+((((3)))); 
