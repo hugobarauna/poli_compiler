@@ -1,0 +1,11 @@
+int soma(int a, int b) do
+  return a + b;
+end
+
+void a?(int b) do
+  1 == b;
+end
+
+int main() do
+  soma(1, 2);
+end

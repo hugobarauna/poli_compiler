@@ -101,7 +101,8 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
         current_state = 5;
         break;
       case LPAR:
-        //remove_stack_variable_semantic_action();
+        routine_definition_semantic_action();
+        begin_scope_semantic_action();
         current_state = 4;
         break;
       case LBRA:
@@ -117,8 +118,11 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       }
       break;
     case 3:
-      if (token->class == LPAR)
+      if (token->class == LPAR) {
+        routine_definition_semantic_action();
+        begin_scope_semantic_action();
         current_state = 4;
+      }
       else
         return 0;
       break;
@@ -150,13 +154,15 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       else return 0;
       break;
     case 8:
-      if (token->class == IDENTIFIER)
+      if (token->class == IDENTIFIER) {
+        routine_param_semantic_action(token->value);
         current_state = 16;
+      }
       else return 0;
       break;
     case 9:
       if (token->class == DO) {
-        begin_scope_semantic_action();
+        create_routine_semantic_action();
         current_state = 11;
       }
       else
@@ -185,6 +191,7 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       break;
     case 13:
       if (token->class == END) {
+        end_routine_semantic_action();
         end_scope_semantic_action();
         current_state = 6;
       }
@@ -201,8 +208,9 @@ int is_external_decl(BufferedInputStream *source_code_stream) {
       else return 0;
       break;
     case 16:        
-      if (token->class == COMMA)
+      if (token->class == COMMA) {
         current_state = 18;
+      }
       else if (token->class == RPAR) {
         end_declaration_semantic_action();
         current_state = 9;
@@ -387,8 +395,10 @@ int is_stmt(BufferedInputStream *stream) {
         while_semantic_action();
         current_state = 3;
       }
-      else if (token->class == RETURN)
+      else if (token->class == RETURN) {
+        register_return_routine_semantic_action();
         current_state = 4;
+      }
       else if (token->class == SCAN || token->class == PRINT)
         current_state = 5;
       else if (is_expr(stream)) {
@@ -409,6 +419,7 @@ int is_stmt(BufferedInputStream *stream) {
         /* RESOLVE IF BOOL EXPR */
         bool_expr_semantic_action();
         generate_assignment_code();
+        return_routine_semantic_action(1);
         current_state = 12;
       }
       else return 0;
@@ -419,8 +430,10 @@ int is_stmt(BufferedInputStream *stream) {
       else return 0;
       break;
     case 4:
-      if (token->class == SEMICOLON)
+      if (token->class == SEMICOLON) {
+        return_routine_semantic_action(0);
         current_state = 12;
+      }
       else if (is_expr(stream)) {
         current_state = 2;
         continue;
@@ -543,7 +556,7 @@ int is_expr(BufferedInputStream *stream) {
     if (token == NULL)
       return 0; /* ERROR: NOT ROOT NODE */
 
-    printf("Expression, state: <%d>, token: <%s>\n", current_state, token->value);  
+    //printf("Expression, state: <%d>, token: <%s>\n", current_state, token->value);  
 
     switch (current_state) {
       case 0:

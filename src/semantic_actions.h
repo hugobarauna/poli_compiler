@@ -43,6 +43,8 @@ void end_semantic_action();
 void stmt_expr_semantic_action();
 
 void declaration_semantic_action(char *identifier);
+void decl_variable_semantic_action();
+void end_declaration_semantic_action();
 void remove_stack_variable_semantic_action();
 void pop_lvalue_semantic_action();
 
@@ -61,6 +63,9 @@ void bool_operator_semantic_action(Token *token);
 void bool_expr_semantic_action();
 
 void routine_semantic_action();
+void routine_param_semantic_action(char *identifier);
+void begin_scope_semantic_action();
+void end_scope_semantic_action();
 
 /* CODE GENERATION */
 
