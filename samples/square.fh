@@ -1,0 +1,18 @@
+int square(int a) do
+  int square = 0;
+  int i = a;
+  while (i > 0) do
+    int j = a;
+    while (j > 0) do
+      square = square +1;
+      j = j -1;
+    end
+    i = i - 1;
+  end
+  return square;
+end
+
+int main() do
+  int result = square(3);
+  return result;
+end

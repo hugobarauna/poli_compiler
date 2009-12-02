@@ -1,0 +1,13 @@
+int fatorial(int n) do
+  int fat = 1;
+  while (n > 0) do
+    fat = fat * n;
+    n = n - 1;
+  end
+  return fat;
+end
+
+int main() do
+  int fator = fatorial(7);
+  return fator;
+end
