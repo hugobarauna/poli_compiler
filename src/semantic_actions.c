@@ -13,11 +13,13 @@ int bools_counter = -1;
 int temps_counter = -1;
 int funcs_counter = -1;
 int func_vars_counter = -1;
+int is_return = 0;
 Hashtable *sym_table;
 Stack operators_stack, operands_stack, constants_stack, variables_stack;
 Stack stmts_stack;
 Token *bool_operator = NULL;
 char *lvalue = NULL;
+RoutineDescriptor *func = NULL;
 
 static void clean_stacks();
 
@@ -50,6 +52,8 @@ void semantic_initialize() {
   
   fp = fopen("out.asm", "w");
   fprintf(fp, "        @  /0\n");
+  fprintf(fp, "        SC main\n");
+  fprintf(fp, "        HM /0\n");
   /* Maybe here, I already can open the output .asm file and write the first headers,
      somethin like this
            @ /0
@@ -202,7 +206,7 @@ void decl_variable_semantic_action() {
   VariableDescriptor *descriptor;
   char *label;
   
-  if (is_identifier_declared(lvalue))
+  if (is_identifier_locally_declared(lvalue))
     fatal_error("Error: Identifier already declared.");
   
   // increment variable counter
@@ -229,11 +233,44 @@ void decl_variable_semantic_action() {
   stack_push(item, &variables_stack);
 }
 
-void routine_param_semantic_action() {
-/*  RoutineDescriptor *routine;
+
+void routine_definition_semantic_action() {
+  if (func != NULL)
+    fatal_error("Error: Cannot have a function inside a function\n");
+
+  printf("~ routine definition semantic action\n");
+  VariableStackItem *item;
+  RoutineDescriptor *descriptor;
+
+  if (is_identifier_locally_declared(lvalue))
+    fatal_error("Error: conflict name.");
+
+  printf("LVALUE? %s\n", lvalue);
+  // insert into symbol table and save its type (descriptor)
+  descriptor = (RoutineDescriptor *)malloc(sizeof(RoutineDescriptor));
+  descriptor->return_type = type_declared;
+  descriptor->name = lvalue;
+  descriptor->num_params = 0;
+  func = descriptor;
+  
+  scope_sym_table_insert(lvalue, lvalue, descriptor);
+}
+
+void routine_param_semantic_action(char *identifier) {
+  SymTableEntry *entry;
+  RoutineDescriptor *routine;
   VariableStackItem *item;
   VariableDescriptor *variable;
   char *label;
+  
+  entry = scope_sym_table_get(lvalue);
+  routine = (VariableDescriptor*)entry->descriptor;
+  //routine->params[routine->num_params++] = variable;
+  
+  printf("~ routine_param_semantic_action\n");
+
+  if (is_identifier_locally_declared(identifier))
+    fatal_error("Error: Variable name conflict in function declaration");
   
   // increment variable counter
   func_vars_counter++;
@@ -244,32 +281,45 @@ void routine_param_semantic_action() {
   variable->name = label;
   variable->default_value = "0";
   
-  //scope_sym_table_insert(identifier, label, descriptor);
+  scope_sym_table_insert(identifier, label, variable);
   
-  item = stack_item_new(label, descriptor->default_value);
+  item = stack_item_new(label, variable->default_value);
   stack_push(item, &variables_stack);  
   
-  //routine = sym_table_get(value);
-  //routine->params[routine->num_params]
-  */
+  func->params[func->num_params] = variable;
+  func->num_params++;
 }
 
-void routine_definition_semantic_action() {
-/*  VariableStackItem *item;
-  RoutineDescriptor *descriptor;
+void create_routine_semantic_action() {
+  printf ("CALLLLLLLED\n");
+  int i;
+  for (i = 0; i < func->num_params; ++i)
+    fprintf(fp, "%s  K  =0\n", func->params[i]->name);
+  fprintf(fp, "%s  K  /0\n", func->name);
+}
 
-  // insert into symbol table and save its type (descriptor)
-  descriptor = (RoutineDescriptor *)malloc(sizeof(RoutineDescriptor));
-  descriptor->type = type_declared;
-  descriptor->name = lvalue;
-  descriptor->num_params = 0;
-  
- scope_sym_table_insert(identifier, lvalue, descriptor);
-  
-  item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
-  item->label = lvalue;
-  item->value = "FUNC";
-*/
+void register_return_routine_semantic_action() {
+  is_return = 1;
+}
+
+void return_routine_semantic_action(int has_param) {
+  if (is_return && has_param && func->return_type == VOID)
+    fatal_error("Error: Return expression does not return a value");
+
+  if (!has_param)
+    fprintf(fp, "         RS %s\n", func->name);
+  else {
+    // LOAD VARIABLE
+    VariableStackItem *item = stack_pop(&operands_stack);
+    fprintf(fp, "         LD %s\n", item->label);
+    fprintf(fp, "         RS %s\n", func->name);
+  }
+  is_return = 0;
+}
+
+void end_routine_semantic_action() {
+  fprintf(fp, "          RS  %s\n", func->name);
+  func = NULL;
 }
 
 void begin_scope_semantic_action() {
@@ -321,7 +371,11 @@ void identifier_semantic_action(char *identifier) {
   VariableStackItem *item;
   SymTableEntry *entry;
   
+  printf("~ identifier_semantic_action\n");
+  
   // push the identifier into the operands stack
+  if (!is_identifier_declared(identifier))
+    fatal_error("Error: Variable not declared");
   
   entry = scope_sym_table_get(identifier);
   item = (VariableStackItem *)malloc(sizeof(VariableStackItem));
@@ -567,7 +621,7 @@ void generate_data_definition_code() {
   fprintf(fp, "          @   /200\n");
   while (!stack_empty(&variables_stack)) {
     VariableStackItem *item = (VariableStackItem *)stack_pop(&variables_stack);
-    fprintf(fp, "%-10sK   =%s\n", item->label, item->value);
+    fprintf(fp, "%-15sK   =%s\n", item->label, item->value);
   }
   
   while (!stack_empty(&constants_stack)) {
