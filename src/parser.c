@@ -40,13 +40,13 @@ extern char* lvalue;
 
 int parse(BufferedInputStream *source_code_stream) {
   semantic_initialize();
-  printf("Start parsing...\n");
+  //printf("Start parsing...\n");
   token = next_token(source_code_stream);
   if (!is_prog(source_code_stream)) {
     return 0;
   }
   
-  printf("program OK\n");
+  //printf("program OK\n");
   generate_end_program_code();
   generate_data_definition_code();
   
