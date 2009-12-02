@@ -135,7 +135,8 @@ task :generate_binary => ["compiler.o", "parser_test.o", "parser.o", "lexer.o",
                           "string_buffer.o", "error.o", "bufstream.o", "xstring.o", 
                           "alloc.o", "hashtable.o", "CuTest.o", "stack.o", 
                           "semantic_actions.o", "scope.o"] do |t|
-  sh "gcc #{ARGS} #{t.prerequisites.join(' ')} -o compiler"
+  sh "gcc #{ARGS} #{t.prerequisites.join(' ')} -o bin/compiler"
+  puts "\nThe compiler was compiled to bin/compiler."
 end
 
 ########################################
