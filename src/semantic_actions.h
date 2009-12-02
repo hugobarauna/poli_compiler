@@ -13,6 +13,7 @@
 typedef struct _variable_stack_item {
   char *label;
   char *value;
+  char *comment;
 } VariableStackItem;
 
 typedef enum e_label_type {
@@ -25,6 +26,8 @@ typedef enum e_label_type {
   L_WHILE,
   L_ENDWHILE,
   L_FUNC_VAR,
+  L_FUNC_RESULT,
+  L_FUNC_END,
   L_FUNC,
   L_TRUE,
   L_FALSE
@@ -43,6 +46,8 @@ void end_semantic_action();
 void stmt_expr_semantic_action();
 
 void declaration_semantic_action(char *identifier);
+void decl_variable_semantic_action();
+void end_declaration_semantic_action();
 void remove_stack_variable_semantic_action();
 void pop_lvalue_semantic_action();
 
@@ -61,6 +66,9 @@ void bool_operator_semantic_action(Token *token);
 void bool_expr_semantic_action();
 
 void routine_semantic_action();
+void routine_param_semantic_action(char *identifier);
+void begin_scope_semantic_action();
+void end_scope_semantic_action();
 
 /* CODE GENERATION */
 

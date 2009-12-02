@@ -3,11 +3,11 @@
 
 static Entry* new_entry(KEY key, VALUE value);
 
-static int str_hash(char *str) {
-    int result = 0;
+static unsigned int str_hash(char *str) {
+    unsigned int result = 0;
     char *ptr = str;
     for (; *ptr; ptr++)
-        result = 17 * result + *ptr;
+        result = 17 * result + (unsigned int)*ptr;
     return result;
 }
 
@@ -39,30 +39,33 @@ void hashtable_delete(Hashtable *table) {
 }
 
 void hashtable_insert(Hashtable *table, KEY key, VALUE value) {
-  int internal_key;
+  unsigned int internal_key;
+  Entry *entry;
+  Entry *new = new_entry(key, value);
+  
   internal_key = table->hashing_function(key) % table->size;
 
   /* No colision */
-  if (table->entries[internal_key] == NULL) {
-    Entry* entry = new_entry(key, value);
-    table->entries[internal_key] = entry;
+  entry = table->entries[internal_key];
+  if (entry == NULL) {
+    table->entries[internal_key] = new;
   }
   else {
-    Entry *entry = new_entry(key, value);
+    while (entry->next != NULL)
+      entry = entry->next;
 
-    Entry *previous_entry = table->entries[internal_key];
-    previous_entry->next = entry;
+    entry->next = new;
   }
 }
 
 VALUE hashtable_get(Hashtable *table, KEY key) {
   Entry *entry;
-  int internal_key;
+  unsigned int internal_key;
   internal_key = table->hashing_function(key) % table->size;
-
   entry = table->entries[internal_key];
-  if (entry == NULL) return NULL;
 
+  if (entry == NULL) return NULL;
+  
   while ( entry != NULL && strcmp(entry->key, key) ) {
     entry = entry->next;
   }
@@ -72,7 +75,7 @@ VALUE hashtable_get(Hashtable *table, KEY key) {
 
 void hashtable_remove(Hashtable *table, KEY key) {
   Entry *entry, *before;
-  int internal_key;
+  unsigned int internal_key;
   internal_key = table->hashing_function(key) % table->size;
 
   before = entry = table->entries[internal_key];

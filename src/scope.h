@@ -4,9 +4,6 @@
 #include "lexer.h"
 #include "hashtable.h"
 
-#define SYM_TABLE_SIZE 100
-
-
 typedef struct scope {
   Hashtable *table;
   struct scope *next;
@@ -23,14 +20,16 @@ typedef struct _variable_descriptor {
 typedef struct _routine_descriptor {
   class_t return_type;
   char *name;
+  char *result;
+  char *end;
   int num_params;
-  VariableDescriptor params[10];
+  VariableDescriptor *params[10];
 } RoutineDescriptor;
 
 typedef struct _sym_table_entry {
-  char* id_name;
-  char* label;
-  Descriptor* descriptor;
+  char *id_name;
+  char *label;
+  Descriptor *descriptor;
 } SymTableEntry;
 
 int scope_numbers();
@@ -41,5 +40,5 @@ void scope_sym_table_insert(char* id_name, char* label, Descriptor* descriptor);
 SymTableEntry* scope_sym_table_get(char* id_name);
 SymTableEntry *scope_search_identifier(char *id_name);
 int is_identifier_declared(char* id_name);
-
+int is_identifier_locally_declared(char *id_name);
 #endif

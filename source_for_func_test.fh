@@ -1,0 +1,18 @@
+int soma(int a, int b) do
+  return a + b;
+end
+
+int potencia(int n, int e) do
+  int result = 1;
+  while (e > 0) do
+    result = result * n;
+    e = e - 1;
+  end
+  return result;
+end
+
+int main() do
+  int result = soma(1, 2);
+  int pot = potencia(result, result);
+  return pot;
+end
