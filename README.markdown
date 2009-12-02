@@ -7,32 +7,37 @@ This project is a simple compiler built during the languages and compilers cours
 How to run
 ----------
 
-If you are a cool guy and have ruby and rake in your machine, you can skip to
-the next topic and build the project yourself, and after that, you can run it.
-
-But, if you still are one of these old fashioned guys (=p), and still don't have
-ruby, don't worry, we are giving you a already built binary, just check it out the compiler file.
+First of all, we need to build our compiler, so skip to the next topic, and
+after that, you can go back here, and we will teach you the art of how to run
+our compiler. =p
 
 We know that you are lazy and will not write a program in our language, so we
 already wrote a program for you. The source is the final_program.fh file.
 
 So, in order to run the compiler and actually get your hands dirty with MVN 
-assembly, just run `./compiler final_program.fh`. The output file will be the
+assembly, just run `./bin/compiler final_program.fh`. The output file will be the
 out.asm one.
 
 
 How to build
 ------------
 
-We are building the project with [Rake](http://rake.rubyforge.org/). All you
-will need to do is `rake generate_binary`
+We are building the project with [Rake](http://rake.rubyforge.org/). If you are 
+a cool guy and have ruby and rake installed in your machine, all you have to do 
+in order to build the project yourself is `rake generate_binary`. This will 
+generate a bin file at bin/compiler. Be happy!
+
+But, if you still are one of these old fashioned guys (=p), and still don't have
+ruby, don't worry, we are giving you another way to build our project, manually.
+Just run `gcc -std=c99 -Wall -O2 -g compiler.o parser_test.o parser.o lexer.o string_buffer.o error.o bufstream.o xstring.o alloc.o hashtable.o CuTest.o stack.o semantic_actions.o scope.o -o bin/compiler`. This will 
+generate a bin file at bin/compiler. Be happy!
 
 
 Tests
 -----
 
 We are very proud to say that we have a very good test coverage in this project.
-And hey, we think that is not so common for C projects to have such a good test
+And hey, we think that this is not so common for C projects to have such a good test
 suite. =p
 
 To run the test suite, you will need Rake too. And one more time, all you have

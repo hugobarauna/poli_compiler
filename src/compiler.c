@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
   else {
     in = buffered_input_stream_new(fp, BUFFER_SIZE);
     parse(in);
-    printf("\n\n Your program was compiled, you can check the output at the out.asm file\n");
+    printf("\n\nYour program was compiled, you can check the output at the out.asm file\n");
   }
 
   return 0;
