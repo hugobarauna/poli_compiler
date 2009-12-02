@@ -1,0 +1,12 @@
+int main() do
+  int a;
+  int b = 13;
+  
+  if (b > 0) do
+    a = 7;
+  else
+    a = 3;
+  end
+  
+  return 0;
+end
