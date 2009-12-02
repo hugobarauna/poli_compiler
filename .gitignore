@@ -6,3 +6,4 @@ test/cu_all_test.c
 *.asm
 *.mvn
 *.lst
+compiler
