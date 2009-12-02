@@ -18,7 +18,7 @@ typedef struct _entry {
 typedef struct _hashtable {
     Entry* *entries;
     unsigned int size;
-    int (*hashing_function) (KEY key);
+    unsigned int (*hashing_function) (KEY key);
 } Hashtable;
 
 /* Create a new instance of hashtable */
