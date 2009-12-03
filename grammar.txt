@@ -29,3 +29,28 @@ stmt = "if" "(" expr ")" "do" compound_stmt [ "else" compound_stmt ] "end" | "wh
 expr = factor { ( "*" | "/" | "+" | "-" ) factor } [ ( "<" | ">" | ">=" | "<=" | "==" | "!=" ) factor { ( "*" | "/" | "+" | "-" ) factor } ] | factor "=" expr.
 
 factor = NUMBER | IDENTIFIER | IDENTIFIER "[" NUMBER "]" | ( OPERATION | IDENTIFIER ) "(" [ expr { "," expr } ] ")" | "("expr ")".
+
+LEXER (TOKENS)
+--------------
+
+
+*token = ( "+" | "-" | "*" [ "*" ] | "/" | "%" | "&" [ "&" ] | "|" [ "|" ] | "^" | "<" "<" | ">" ">" ) [ "=" ] | ( "," | ";" | ":" [ ":" ] | "." [ "." [ "." ] ] | "|" | "^" | "&" | "<" "=" ">" | "=" ">" | "-" ">" | ( "=" | "!" ) "~" ) | ( "!" | "=" [ "=" ] | ">" | "<" ) [ "=" ] | ( "+" | "-" | "*" [ "*" ] | "/" | "%" ) | ( "<" "<" | ">" ">" | "~" | "[" | "]" | "(" | ")" | "{" | "}" ) | "+" "+" | "-" "-" | [ "$" ] ( "_" | letter ) { "_" | letter | digit } [ "!" | "?" ] | """ { any_char } """ | "'" { any_char } "'" | digit { digit } [ "." digit { digit } ].
+
+letter = 'a' | 'b' | .. | 'z' | 'A' | 'B' | .. | 'Z'.
+digit = '0' | '1' | .. | '9'.
+any_char = any printable ASCII character (excluding control character).
+
+* reduced version
+
+
+LEXER (TOKENS)
+--------------
+
+operators = "+" | "-" | "*" | "**" | "/" | "%" | "&" | "&&" | "|" | "||"  | "<<" | ">>"
+assign_operators = operators "=".
+unary_operators = "^" | ":" | "::" | "->" | "++" | "--".
+delimiters = "," | ";" | "." | ".." | "..." | "=>" | "(" | ")" | "{" | "}" | "[" | "]".
+logic_operators = "=~" | "!~" | "<=>" | ">" | "<" | ">=" | "<=" | "==" | "!=" | "==="
+string = "'" any_char "'" | """ any_char """
+identifier = "$" ( "_" | letter ) { ( "_" | letter | digit ) } [ "!" | "?" ].
+number = digit { digit [ "." { digit } ] }.
