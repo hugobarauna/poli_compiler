@@ -52,5 +52,5 @@ unary_operators = "^" | ":" | "::" | "->" | "++" | "--".
 delimiters = "," | ";" | "." | ".." | "..." | "=>" | "(" | ")" | "{" | "}" | "[" | "]".
 logic_operators = "=~" | "!~" | "<=>" | ">" | "<" | ">=" | "<=" | "==" | "!=" | "==="
 string = "'" any_char "'" | """ any_char """
-identifier = "$" ( "_" | letter ) { ( "_" | letter | digit ) } [ "!" | "?" ].
+identifier = ["$"] ( "_" | letter ) { ( "_" | letter | digit ) } [ "!" | "?" ].
 number = digit { digit [ "." { digit } ] }.
